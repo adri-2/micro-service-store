@@ -1,0 +1,47 @@
+services:
+  catalogue-db:
+    image: postgres:16
+    container_name: catalogue-db
+    environment:
+      POSTGRES_DB: catalogue_db
+      POSTGRES_USER: catalogue_user
+      POSTGRES_PASSWORD: catalogue_pass
+    volumes:
+      - catalogue_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - catalogue_db_network
+      - store_front_network
+
+  catalogue-service:
+    build: .
+    container_name: catalogue-service
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    environment:
+      DB_NAME: catalogue_db
+      DB_USER: catalogue_user
+      DB_PASSWORD: catalogue_pass
+      DB_HOST: catalogue-db
+      DB_PORT: 5432
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - catalogue-db
+    networks:
+      - store_front_network
+      - catalogue_db_network
+
+volumes:
+  catalogue_db_data:
+
+networks:
+  catalogue_db_network:
+    driver: bridge
+  store_front_network:
+    external: true

@@ -1,0 +1,13 @@
+{
+  "service": {
+    "name": "catalogue-service",
+    "id": "catalogue-service-api",
+    "address": "catalogue-service",
+    "port": 8000,
+    "check": {
+      "http": "http://catalogue-service:8000/health/",
+      "interval": "10s",
+      "timeout": "2s"
+    }
+  }
+}

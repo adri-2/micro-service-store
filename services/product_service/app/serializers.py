@@ -16,15 +16,12 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     # Affichage en lecture
-    category = CategorySerializer(read_only=True)
-    suppliers = SupplierSerializer(many=True, read_only=True)
+    # category = CategorySerializer(read_only=True)
+    # suppliers = SupplierSerializer( read_only=True)
 
     # Écriture (relations via ID)
-    category_id = serializers.UUIDField(write_only=True)
-    supplier_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        write_only=True
-    )
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(),  write_only=True)
+    suppliers =  serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all(),write_only=True)
 
     class Meta:
         model = Product
@@ -37,33 +34,33 @@ class ProductSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def create(self, validated_data):
-        category_id = validated_data.pop("category_id")
-        supplier_ids = validated_data.pop("supplier_ids", [])
+    # def create(self, validated_data):
+    #     category_id = validated_data.pop("category_id")
+    #     supplier_ids = validated_data.pop("supplier_ids", [])
 
-        product = Product.objects.create(
-            category_id=category_id,
-            **validated_data
-        )
+    #     product = Product.objects.create(
+    #         category_id=category_id,
+    #         **validated_data
+    #     )
 
-        if supplier_ids:
-            product.suppliers.set(supplier_ids)
+    #     if supplier_ids:
+    #         product.suppliers.set(supplier_ids)
 
-        return product
+    #     return product
 
-    def update(self, instance, validated_data):
-        category_id = validated_data.pop("category_id", None)
-        supplier_ids = validated_data.pop("supplier_ids", None)
+    # def update(self, instance, validated_data):
+    #     category_id = validated_data.pop("category_id", None)
+    #     supplier_ids = validated_data.pop("supplier_ids", None)
 
-        if category_id:
-            instance.category_id = category_id
+    #     if category_id:
+    #         instance.category_id = category_id
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
 
-        instance.save()
+    #     instance.save()
 
-        if supplier_ids is not None:
-            instance.suppliers.set(supplier_ids)
+    #     if supplier_ids is not None:
+    #         instance.suppliers.set(supplier_ids)
 
-        return instance
+    #     return instance

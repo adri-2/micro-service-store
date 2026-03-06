@@ -129,3 +129,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
+
+
+CATALOGUE_SERVICE_URL = "http://localhost:8000"

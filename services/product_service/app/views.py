@@ -1,12 +1,4 @@
 from django.shortcuts import render
-
-# Create your views here.
-# def index(request):
-#     return render(request, "index.html")
-from django.http import JsonResponse
-
-def health(request):
-    return JsonResponse({"status": "ok"})
 from rest_framework import viewsets
 from .models import Category, Supplier, Product
 from .serializers import (
@@ -14,6 +6,16 @@ from .serializers import (
     SupplierSerializer,
     ProductSerializer
 )
+
+
+# Create your views here.
+# def index(request):
+#     return render(request, "index.html")
+from django.http import JsonResponse
+
+def health(request):
+    return JsonResponse({"status": "ok",
+                         "message": "Product service is healthy."})
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

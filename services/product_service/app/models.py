@@ -45,7 +45,7 @@ class Product(BaseModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     image = models.ImageField(upload_to="products/", blank=True)
     stock = models.PositiveIntegerField(default=0)
-    suppliers = models.ManyToManyField(Supplier, related_name="products")
+    suppliers = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name="products")
 
     def clean(self):
         if self.stock < 0:

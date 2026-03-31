@@ -15,3 +15,24 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.prefetch_related("items")
     serializer_class = OrderSerializer
+    
+    
+    
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='confirm'
+    )
+    def confirm(self,request,pk=None):
+        order = self.get_object()
+        if order.status != Order.StatusChoices.PENDING:
+            return Response(
+                {"detail":"Seules les commandes Pending peuvent être confirmées."},
+                status=status.HTTP_400_BAD_REQUEST
+            ) 
+        order.status = Order.StatusChoices.CONFIRMED
+        order.save(update_fields=["status","updated_at"])
+        serializer = self.get_serializer(order)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        

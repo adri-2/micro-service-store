@@ -33,6 +33,12 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
     depends_on:
       - orders-db
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.order.rule=Host(`order.localhost`)
+      - traefik.http.services.order.loadbalancer.server.port=8000
+      - "traefik.docker.network=store_front_network"
+      - "traefik.http.routers.order.entrypoints=web"
     networks:
       - orders_db_network
       - store_front_network

@@ -3,6 +3,14 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
+from django.contrib.auth.base_user import AbstractBaseUser
+
+# User vide qui ne crée qu'une table minimale
+class EmptyUser(AbstractBaseUser):
+    USERNAME_FIELD = 'id'
+    
+    class Meta:
+        app_label = 'app'
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

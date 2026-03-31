@@ -1,2 +1,10 @@
 GET http://catalogue-service:8001/categories/ HTTP/1.1
 Content-Type: application/json
+
+{
+        "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+        "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+        "items_input": [
+            {"product_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9", "quantity": 2}
+        ]
+    }

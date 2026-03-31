@@ -39,10 +39,13 @@ services:
     labels:
       - "traefik.enable=true"
       # - "traefik.http.routers.catalogue-service.rule=Host(`catalogue.local`)"
-      - "traefik.http.routers.catalogue-service.rule=PathPrefix(`/catalogue`)"
-      - "traefik.http.services.catalogue-service.loadbalancer.server.port=8000"
+      # - "traefik.http.routers.catalogue-service.rule=PathPrefix(`/catalogue`)"
+      # - "traefik.http.services.catalogue-service.loadbalancer.server.port=8000"
+      - traefik.http.routers.catalogue.rule=Host(`catalogue.localhost`)
+      - traefik.http.services.catalogue.loadbalancer.server.port=8000
+
       - "traefik.docker.network=store_front_network"
-      - "traefik.http.routers.catalogue-service.entrypoints=web"
+      - "traefik.http.routers.catalogue.entrypoints=web"
 
 volumes:
   catalogue_db_data:

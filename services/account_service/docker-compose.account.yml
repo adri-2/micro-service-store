@@ -32,6 +32,12 @@ services:
       DB_PORT: 5432
     depends_on:
       - account-db
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.account.rule=Host(`account.localhost`)
+      - traefik.http.services.account.loadbalancer.server.port=8000
+      - "traefik.docker.network=store_front_network"
+      - "traefik.http.routers.account.entrypoints=web"
     networks:
       - account_db_network
       - store_front_network

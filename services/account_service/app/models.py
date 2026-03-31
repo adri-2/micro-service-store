@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 
 
 class BaseModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -12,7 +13,7 @@ class BaseModel(models.Model):
         abstract = True
 
 class User(AbstractBaseUser, BaseModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+   
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=True)    
 
@@ -24,7 +25,7 @@ class User(AbstractBaseUser, BaseModel):
 
 
 class Client(BaseModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+   
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)

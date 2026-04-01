@@ -33,6 +33,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
     depends_on:
       - catalogue-db
+      - redis
     networks:
       - store_front_network
       - catalogue_db_network
@@ -46,6 +47,14 @@ services:
 
       - "traefik.docker.network=store_front_network"
       - "traefik.http.routers.catalogue.entrypoints=web"
+
+  redis:
+    image: redis:7
+    container_name: redis-account
+    ports:
+      - "6379:6379"
+    networks:
+      - store_front_network
 
 volumes:
   catalogue_db_data:

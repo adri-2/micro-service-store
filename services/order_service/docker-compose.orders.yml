@@ -30,17 +30,26 @@ services:
       DB_PASSWORD: orders_pass
       DB_HOST: orders-db
       DB_PORT: 5432
+      CATALOGUE_SERVICE_URL: http://catalogue-service:8000
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
     depends_on:
       - orders-db
+      - redis
     labels:
       - traefik.enable=true
-      - traefik.http.routers.order.rule=Host(`order.localhost`)
-      - traefik.http.services.order.loadbalancer.server.port=8000
+      - traefik.http.routers.orders.rule=Host(`orders.localhost`)
+      - traefik.http.services.orders.loadbalancer.server.port=8000
       - "traefik.docker.network=store_front_network"
-      - "traefik.http.routers.order.entrypoints=web"
+      - "traefik.http.routers.orders.entrypoints=web"
     networks:
       - orders_db_network
+      - store_front_network
+  redis:
+    image: redis:7
+    container_name: redis-account
+    ports:
+      - "6379:6379"
+    networks:
       - store_front_network
 
 volumes:

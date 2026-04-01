@@ -25,12 +25,12 @@ SECRET_KEY = "django-insecure-ga(rs0r%)ph$xqeu*u()psjt7nf6o-cu$jn&4ep7^%erk_l**6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "catalogue.localhost",
-    "orders.localhost",
-    "accounts.localhost",
-    "localhost",
-    "127.0.0.1",
+ALLOWED_HOSTS = ["*"
+    # "catalogue.localhost",
+    # "orders.localhost",
+    # "accounts.localhost",
+    # "localhost",
+    # "127.0.0.1",
 ]
 
 

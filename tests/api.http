@@ -1,0 +1,118 @@
+@product_service = http://localhost:8001
+@order_service = http://localhost:8002
+
+### Health checks
+GET {{product_service}}/health/ HTTP/1.1
+
+###
+GET {{order_service}}/health/ HTTP/1.1
+
+###
+# PRODUCT SERVICE
+
+### Create a category
+POST {{product_service}}/categories/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Electronics",
+    "description": "Devices, consoles and accessories"
+}
+
+### Create a supplier
+POST {{product_service}}/suppliers/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Sony",
+    "contact_name": "Support Team",
+    "email": "contact@sony.com",
+    "phone_number": "+33100000000",
+    "address": "1-7-1 Konan, Minato-ku, Tokyo"
+}
+
+### Create a product
+# Replace category and suppliers with real UUIDs returned by the previous requests.
+POST {{product_service}}/products/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "PlayStation 5",
+    "price": "499.99",
+    "description": "Console de test",
+    "category": "00000000-0000-0000-0000-000000000001",
+    "suppliers": "00000000-0000-0000-0000-000000000002",
+    "stock": 10
+}
+
+### List products
+GET {{product_service}}/products/ HTTP/1.1
+
+### Get one product by UUID
+GET {{product_service}}/products/00000000-0000-0000-0000-000000000003/ HTTP/1.1
+
+### Invalid product payload: price must be > 0
+POST {{product_service}}/products/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Invalid Product",
+    "price": "0",
+    "description": "Should fail",
+    "category": "00000000-0000-0000-0000-000000000001",
+    "suppliers": "00000000-0000-0000-0000-000000000002",
+    "stock": 1
+}
+
+###
+# ORDER SERVICE
+
+### Create an order
+# Replace product_id with a real product UUID created in the product service.
+POST {{order_service}}/orders/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "items_input": [
+        {
+            "product_id": "876d59e7-1804-463b-83d5-0dc5990e8067",
+            "quantity": 2
+        }
+    ]
+}
+
+### List orders
+GET {{order_service}}/orders/ HTTP/1.1
+
+### Get one order by UUID
+GET {{order_service}}/orders/00000000-0000-0000-0000-000000000004/ HTTP/1.1
+
+### Confirm an order
+POST {{order_service}}/orders/8232c0ef-90b4-4af2-99a3-41d127ade247/confirm/ HTTP/1.1
+
+### Invalid order payload: empty items_input
+POST {{order_service}}/orders/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "items_input": []
+}
+
+### Invalid order payload: quantity must be >= 1
+POST {{order_service}}/orders/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "items_input": [
+        {
+            "product_id": "876d59e7-1804-463b-83d5-0dc5990e8067",
+            "quantity": 0
+        }
+    ]
+}

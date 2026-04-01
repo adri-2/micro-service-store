@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,12 +26,12 @@ SECRET_KEY = "django-insecure-ga(rs0r%)ph$xqeu*u()psjt7nf6o-cu$jn&4ep7^%erk_l**6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "catalogue.localhost",
-    "orders.localhost",
-    "accounts.localhost",
-    "localhost",
-    "127.0.0.1",
+ALLOWED_HOSTS = ["*"
+    # "catalogue.localhost",
+    # "orders.localhost",
+    # "accounts.localhost",
+    # "localhost",
+    # "127.0.0.1",
 ]
 
 
@@ -138,6 +139,6 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': [],      # pas de permissions
 }
 
-
-CATALOGUE_SERVICE_URL = "http://localhost:8001"
+#settings spécifiques à l'application
+CATALOGUE_SERVICE_URL =  "http://catalogue-service:8000"
 AUTH_USER_MODEL = 'app.EmptyUser'

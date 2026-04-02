@@ -32,14 +32,23 @@ services:
       DB_PORT: 5432
     depends_on:
       - account-db
+      - redis
+
     labels:
       - traefik.enable=true
-      - traefik.http.routers.account.rule=Host(`account.localhost`)
-      - traefik.http.services.account.loadbalancer.server.port=8000
+      - traefik.http.routers.accounts.rule=Host(`accounts.localhost`)
+      - traefik.http.services.accounts.loadbalancer.server.port=8000
       - "traefik.docker.network=store_front_network"
-      - "traefik.http.routers.account.entrypoints=web"
+      - "traefik.http.routers.accounts.entrypoints=web"
     networks:
       - account_db_network
+      - store_front_network
+  redis:
+    image: redis:7
+    container_name: redis-accounts
+    ports:
+      - "6379:6379"
+    networks:
       - store_front_network
 
 volumes:

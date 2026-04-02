@@ -129,12 +129,26 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# settings catalogue-service JWT
 # Django REST Framework Configuration
+import os
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
 }
 
+
+SIMPLE_JWT = {
+    "ALGORITHM": os.environ.get("JWT_ALGORITHM", "HS256"),
+    "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY", SECRET_KEY),
+    "VERIFYING_KEY": os.environ.get("JWT_VERIFYING_KEY", ""),
+    "AUTH_HEADER_TYPES": ("Bearer","JWT"),
+    "ISSUER": os.environ.get("JWT_ISSUER", "account-service"),
+    "AUDIENCE": os.environ.get("JWT_AUDIENCE", "store-front-services"),
+}
 
 AUTH_USER_MODEL = 'app.EmptyUser'

@@ -50,7 +50,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: redis-account
+    container_name: redis-catalogue
     ports:
       - "6379:6379"
     networks:

@@ -7,10 +7,20 @@ def _build_url(path: str) -> str:
     clean_path = path.lstrip("/")
     return f"{base}/{clean_path}"
 
-def get_product(product_id: str) -> dict:
+def _auth_headers(access_token: str | None) -> dict:
+    if not access_token:
+        return {}
+    token = access_token.strip()
+    if token.lower().startswith("bearer "):
+        return {"Authorization": token}
+    return {"Authorization": f"Bearer {token}"}
+
+
+def get_product(product_id: str, access_token: str | None = None) -> dict:
     url = _build_url(f"products/{product_id}/")
+    headers = _auth_headers(access_token)
     try:
-        response = requests.get(url,timeout=5)
+        response = requests.get(url, timeout=5, headers=headers)
     except requests.exceptions.ConnectionError as e:
         raise ValidationError("catalogue-service est inaccessible.") from e
     except requests.exceptions.Timeout as e:
@@ -23,10 +33,11 @@ def get_product(product_id: str) -> dict:
 
     return response.json()
 
-def get_products() -> dict:
+def get_products(access_token: str | None = None) -> dict:
     url = _build_url(f"/products/")
+    headers = _auth_headers(access_token)
     try:
-        response = requests.get(url,timeout=5)
+        response = requests.get(url, timeout=5, headers=headers)
     except requests.exceptions.ConnectionError as e:
         raise ValidationError("catalogue-service est inaccessible.") from e
     except requests.exceptions.Timeout as e:

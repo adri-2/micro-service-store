@@ -6,6 +6,7 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer
 # Create your views here.
 from django.http import JsonResponse
+from rest_framework import permissions
 
 def health(request):
     return JsonResponse({"status": "ok",
@@ -15,6 +16,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.prefetch_related("items")
     serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]  
     
     
     

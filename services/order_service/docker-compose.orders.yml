@@ -46,7 +46,7 @@ services:
       - store_front_network
   redis:
     image: redis:7
-    container_name: redis-account
+    container_name: redis-orders
     ports:
       - "6379:6379"
     networks:

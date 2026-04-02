@@ -49,6 +49,10 @@ class OrderSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop("items_input", [])
+        request = self.context.get("request")
+        access_token = None
+        if request is not None:
+            access_token = request.META.get("HTTP_AUTHORIZATION")
         
         if not items_data:
             raise serializers.ValidationError(
@@ -61,7 +65,7 @@ class OrderSerializer(serializers.ModelSerializer):
             product_id = str(item["product_id"])
             quantity = item["quantity"]
             
-            product = get_product(product_id)
+            product = get_product(product_id, access_token=access_token)
             unit_price = Decimal(str(product["price"]))
             
             if not product:

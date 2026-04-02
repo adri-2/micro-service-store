@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -129,16 +130,29 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
+# settings 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-    #  'DEFAULT_AUTHENTICATION_CLASSES': [],  # pas d'auth
-    # 'DEFAULT_PERMISSION_CLASSES': [],      # pas de permissions
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ALGORITHM": os.environ.get("JWT_ALGORITHM", "HS256"),
+    "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY", SECRET_KEY),
+    "VERIFYING_KEY": os.environ.get("JWT_VERIFYING_KEY", ""),
+    "AUTH_HEADER_TYPES": ("Bearer", "JWT"),
+    "ISSUER": os.environ.get("JWT_ISSUER", "account-service"),
+    "AUDIENCE": os.environ.get("JWT_AUDIENCE", "store-front-services"),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINUTES", "300"))),
+    # "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("JWT_REFRESH_DAYS", "7"))),
 }
 
 #settings spécifiques à l'application
-CATALOGUE_SERVICE_URL =  "http://catalogue-service:8000"
+# CATALOGUE_SERVICE_URL =  "http://catalogue-service:8000"
+CATALOGUE_SERVICE_URL =  "http://localhost:9000"
 AUTH_USER_MODEL = 'app.EmptyUser'

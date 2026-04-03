@@ -1,0 +1,61 @@
+services:
+  account-db:
+    image: postgres:16
+    container_name: account-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-account_db}
+      POSTGRES_USER: ${DB_USER:-account_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-account_pass}
+    volumes:
+      - account_db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - account_db_network
+      - store_front_network
+
+  account-service:
+    build: .
+    container_name: account-service
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "${ACCOUNT_SERVICE_PORT:-8000}:8000"
+    environment:
+      DB_NAME: ${DB_NAME:-account_db}
+      DB_USER: ${DB_USER:-account_user}
+      DB_PASSWORD: ${DB_PASSWORD:-account_pass}
+      DB_HOST: account-db
+      DB_PORT: ${DB_PORT:-5432}
+    depends_on:
+      - account-db
+      # - redis
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.accounts.rule=Host(`accounts.localhost`)
+      - traefik.http.services.accounts.loadbalancer.server.port=8000
+      - "traefik.docker.network=store_front_network"
+      - "traefik.http.routers.accounts.entrypoints=web"
+    networks:
+      - account_db_network
+      - store_front_network
+  # redis:
+  #   image: redis:7
+  #   container_name: redis-accounts
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - store_front_network
+
+volumes:
+  account_db_data:
+
+networks:
+  account_db_network:
+    driver: bridge
+  store_front_network:
+    external: true

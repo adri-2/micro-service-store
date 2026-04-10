@@ -2,46 +2,55 @@
 @product_service = http://localhost:8001
 @order_service = http://localhost:8002
 
+# Change these values if your seeded user is different.
+@login_email = admin@gmail.com
+@login_password = admin1234
 
-###
-POST {{account_service}}/auth/register/ HTTP/1.1
-Content-Type: application/json
+# client_id is required by order-service model. Keep a valid UUID format.
+@client_id = 11111111-1111-1111-1111-111111111111
 
-{
-    "email": "admin+jwt@gmail.com",
-  "username": "admin",
-  "password": "admin1234"
-}
+### ACCOUNT SERVICE
 
-### Login and capture tokens
+### Health
+GET {{account_service}}/health/ HTTP/1.1
+
+### Login and capture JWT/user
 # @name login
 POST {{account_service}}/auth/login/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "admin@gmail.com",
-    "password": "admin1234"
+    "email": "{{login_email}}",
+    "password": "{{login_password}}"
 }
 
-### Verify token works on account-service
+### Verify access token
+POST {{account_service}}/auth/verify/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "token": "{{login.response.body.$.access}}"
+}
+
+### Me
 GET {{account_service}}/auth/me/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
-### Health checks
-GET {{product_service}}/health/ HTTP/1.1
-
-###
-GET {{order_service}}/health/ HTTP/1.1
-
-###
-# PRODUCT SERVICE
-
-###list products
-GET  {{product_service}}/categories/ HTTP/1.1
-Content-Type: application/json
+### User detail (used by order-service integration)
+GET {{account_service}}/user/me/{{login.response.body.$.user.id}}/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
-### Create a category
+### PRODUCT SERVICE
+
+### Health
+GET {{product_service}}/health/ HTTP/1.1
+
+### List categories
+GET {{product_service}}/categories/ HTTP/1.1
+Authorization: Bearer {{login.response.body.$.access}}
+
+### Create category
+# @name createCategory
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
@@ -51,7 +60,8 @@ Authorization: Bearer {{login.response.body.$.access}}
     "description": "Devices, consoles and accessories"
 }
 
-### Create a supplier
+### Create supplier
+# @name createSupplier
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
@@ -64,8 +74,8 @@ Authorization: Bearer {{login.response.body.$.access}}
     "address": "1-7-1 Konan, Minato-ku, Tokyo"
 }
 
-### Create a product
-# Replace category and suppliers with real UUIDs returned by the previous requests.
+### Create product
+# @name createProduct
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
@@ -74,8 +84,8 @@ Authorization: Bearer {{login.response.body.$.access}}
     "name": "PlayStation 5",
     "price": "499.99",
     "description": "Console de test",
-    "category": "00000000-0000-0000-0000-000000000001",
-    "suppliers": "00000000-0000-0000-0000-000000000002",
+    "category": "{{createCategory.response.body.$.id}}",
+    "suppliers": "{{createSupplier.response.body.$.id}}",
     "stock": 10
 }
 
@@ -83,8 +93,8 @@ Authorization: Bearer {{login.response.body.$.access}}
 GET {{product_service}}/products/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
-### Get one product by UUID
-GET {{product_service}}/products/00000000-0000-0000-0000-000000000003/ HTTP/1.1
+### Get one product
+GET {{product_service}}/products/{{createProduct.response.body.$.id}}/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
 ### Invalid product payload: price must be > 0
@@ -96,26 +106,28 @@ Authorization: Bearer {{login.response.body.$.access}}
     "name": "Invalid Product",
     "price": "0",
     "description": "Should fail",
-    "category": "00000000-0000-0000-0000-000000000001",
-    "suppliers": "00000000-0000-0000-0000-000000000002",
+    "category": "{{createCategory.response.body.$.id}}",
+    "suppliers": "{{createSupplier.response.body.$.id}}",
     "stock": 1
 }
 
-###
-# ORDER SERVICE
+### ORDER SERVICE
 
-### Create an order
-# Replace product_id with a real product UUID created in the product service.
+### Health
+GET {{order_service}}/health/ HTTP/1.1
+
+### Create order
+# @name createOrder
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
 
 {
-    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
-    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "user_id": "{{login.response.body.$.user.id}}",
+    "client_id": "{{client_id}}",
     "items_input": [
         {
-            "product_id": "876d59e7-1804-463b-83d5-0dc5990e8067",
+            "product_id": "{{createProduct.response.body.$.id}}",
             "quantity": 2
         }
     ]
@@ -125,12 +137,12 @@ Authorization: Bearer {{login.response.body.$.access}}
 GET {{order_service}}/orders/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
-### Get one order by UUID
-GET {{order_service}}/orders/00000000-0000-0000-0000-000000000004/ HTTP/1.1
+### Get one order
+GET {{order_service}}/orders/{{createOrder.response.body.$.id}}/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
-### Confirm an order
-POST {{order_service}}/orders/8232c0ef-90b4-4af2-99a3-41d127ade247/confirm/ HTTP/1.1
+### Confirm order
+POST {{order_service}}/orders/{{createOrder.response.body.$.id}}/confirm/ HTTP/1.1
 Authorization: Bearer {{login.response.body.$.access}}
 
 ### Invalid order payload: empty items_input
@@ -139,8 +151,8 @@ Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
 
 {
-    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
-    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "user_id": "{{login.response.body.$.user.id}}",
+    "client_id": "{{client_id}}",
     "items_input": []
 }
 
@@ -150,11 +162,11 @@ Content-Type: application/json
 Authorization: Bearer {{login.response.body.$.access}}
 
 {
-    "user_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
-    "client_id": "09e9cfd0-4dba-4786-b6d8-7ec069aab4f9",
+    "user_id": "{{login.response.body.$.user.id}}",
+    "client_id": "{{client_id}}",
     "items_input": [
         {
-            "product_id": "876d59e7-1804-463b-83d5-0dc5990e8067",
+            "product_id": "{{createProduct.response.body.$.id}}",
             "quantity": 0
         }
     ]

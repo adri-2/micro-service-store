@@ -24,6 +24,8 @@ from app.views import (
     MeView,
     VerifyTokenView,
     RefreshView,
+    UserDetailViewService,
+    ClientDetailService
 )
 
 urlpatterns = [
@@ -33,6 +35,8 @@ urlpatterns = [
     path("auth/refresh/", RefreshView.as_view()),
     path("auth/me/", MeView.as_view()),
     path("auth/verify/", VerifyTokenView.as_view()),
+    path("user/me/<str:pk>/", UserDetailViewService.as_view()),
+    path("customer/me/<str:pk>/", ClientDetailService.as_view()),
 ]
 
 

@@ -10,8 +10,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError
+from .models import Client
 
-from .serializers import RegisterSerializer, LoginSerializer, UserPublicSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserPublicSerializer, ClientSerializer, ClientDetailSerializerService
 
 
 User = get_user_model()
@@ -20,6 +21,16 @@ User = get_user_model()
 def health(request):
     return JsonResponse({"status": "ok", "message": "Account service is healthy."})
 
+class ClientDetailService(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            client = Client.objects.get(id=pk)
+            serializer = ClientDetailSerializerService(client)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Client.DoesNotExist:
+            return Response({"detail": "Client non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -69,6 +80,16 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserPublicSerializer(request.user).data, status=status.HTTP_200_OK)
+    
+class UserDetailViewService(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            return Response(UserPublicSerializer(user).data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
 
 class VerifyTokenView(APIView):

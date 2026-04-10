@@ -4,8 +4,20 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-
+from .models import Client
 User = get_user_model()
+
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ["id", "name", "created_at", "updated_at"]
+        read_only_fields = fields
+        
+class ClientDetailSerializerService(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ["id", "name"]
+        read_only_fields = fields
 
 
 class RegisterSerializer(serializers.Serializer):

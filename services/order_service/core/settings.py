@@ -169,6 +169,7 @@ SIMPLE_JWT = {
 #settings spécifiques à l'application
 # CATALOGUE_SERVICE_URL docker: http://catalogue-service:8000
 CATALOGUE_SERVICE_URL = os.environ.get("CATALOGUE_SERVICE_URL", "http://localhost:8001")
+ACCOUNT_SERVICE_URL = os.environ.get("ACCOUNT_SERVICE_URL", "http://localhost:8000")
 AUTH_USER_MODEL = 'app.EmptyUser'
 
 # CORS Configuration

@@ -143,3 +143,25 @@ class VerifyTokenView(APIView):
 
 class RefreshView(TokenRefreshView):
     permission_classes = [permissions.AllowAny]
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        refresh = request.data.get("refresh")
+        if not refresh:
+            return Response(
+                {"detail": "refresh token requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            token = RefreshToken(refresh)
+            token.blacklist()
+            return Response({"detail": "Déconnexion réussie."}, status=status.HTTP_200_OK)
+        except TokenError:
+            return Response(
+                {"detail": "refresh token invalide."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

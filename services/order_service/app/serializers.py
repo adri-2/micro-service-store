@@ -97,57 +97,6 @@ class OrderListSerializer(OrderSerializer):
     user_name = serializers.SerializerMethodField()
     customer_name = serializers.SerializerMethodField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Évitez les appels HTTP répétés pour des identifiants identiques lors de la sérialisation de la liste.
-        self._user_cache = {}
-        self._customer_cache = {}
-        self._bulk_loaded = False
-
-    def _ensure_bulk_loaded(self):
-        if self._bulk_loaded:
-            return
-
-        request = self.context.get("request")
-        access_token = None
-        if request is not None:
-            access_token = request.META.get("HTTP_AUTHORIZATION")
-
-        instances = self.instance
-        if instances is None:
-            self._bulk_loaded = True
-            return
-
-        if hasattr(instances, "all"):
-            iterable = list(instances.all())
-        elif isinstance(instances, list):
-            iterable = instances
-        elif isinstance(instances, tuple):
-            iterable = list(instances)
-        else:
-            iterable = [instances]
-
-        user_ids = sorted({str(obj.user_id) for obj in iterable})
-        customer_ids = sorted({str(obj.client_id) for obj in iterable})
-
-        try:
-            users_map = get_users_bulk(user_ids, access_token=access_token)
-            for user_id, user in users_map.items():
-                self._user_cache[user_id] = user.get("username", "Inconnu")
-        except ValidationError:
-            pass
-
-        try:
-            customers_map = get_customers_bulk(customer_ids, access_token=access_token)
-            for customer_id, customer in customers_map.items():
-                first_name = customer.get("first_name", "Inconnu")
-                last_name = customer.get("last_name", "")
-                self._customer_cache[customer_id] = f"{first_name} {last_name}".strip()
-        except ValidationError:
-            pass
-
-        self._bulk_loaded = True
-
     class Meta(OrderSerializer.Meta):
        
         fields = [
@@ -164,44 +113,57 @@ class OrderListSerializer(OrderSerializer):
         read_only_fields = fields
         
     def get_user_name(self, obj):
-        self._ensure_bulk_loaded()
-        request = self.context.get("request")
-        user_id = str(obj.user_id)
-        access_token = None
-        # Récupérez le token d'accès depuis les en-têtes de la requête pour les appels aux services externes.
-        if request is not None:
-            access_token = request.META.get("HTTP_AUTHORIZATION")
-
-        # Utilisez un cache pour éviter les appels HTTP répétés pour les mêmes identifiants d'utilisateur.
-        if user_id in self._user_cache:
-            return self._user_cache[user_id]
-
-        try:
-            user = get_user(user_id, access_token=access_token)
-            username = user.get("username", "Inconnu")
-        except (NotFound, ValidationError):
-            username = "Inconnu"
-
-        self._user_cache[user_id] = username
-        return username
+        users_map = self.context.get("users_map",{})
+        user = users_map.get(str(obj.user_id),{})
+        return user.get("username","Inconnu")
         
         
     def get_customer_name(self,obj):
-        self._ensure_bulk_loaded()
+        customers_map = self.context.get("customers_map")
+        customer = customers_map.get(str(obj.client_id),{})
+        first_name = customer.get("first_name","Inconnu")
+        last_name = customer.get("last_name","Inconnu")
+        return f"{first_name} {last_name}".strip()
+    
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Order
+        fields = "__all__" 
+        
+    def get_user_name(self,obj):
+        from .services.user_service import get_user
+        
         request = self.context.get("request")
-        customer_id = str(obj.client_id)
-        access_token = None
-        if request is not None:
-            access_token = request.META.get("HTTP_AUTHORIZATION")
-
-        if customer_id in self._customer_cache:
-            return self._customer_cache[customer_id]
-
+        token = request.META.get("HTTP_AUTHORIZATION") if request else None
+        
         try:
-            customer = get_customer(customer_id,access_token=access_token)
-            username = f"{customer.get('first_name','Inconnu')} {customer.get('last_name','')}"
-        except (NotFound, ValidationError):
-            username = "Inconnu"
-
-        self._customer_cache[customer_id] = username
-        return username
+            user = get_user(str(obj.user_id),token)
+            return user.get("username","Inconnu")
+        except Exception:
+            return "Inconnu"
+        
+    def get_customer_name(self,obj):
+        from .services import get_customer
+        
+        request = self.context.get("request")
+        token = request.META.get("HTTP_AUTHORIZATION") if request else None
+        
+        try:
+            customer = get_customer(str(obj.client_id),token)
+            first_name = customer.get("first_name","Inconnu")
+            last_name = customer.get("last_name","Inconnu")
+            
+            return f"{first_name} {last_name}"
+        except Exception:
+            return "Inconnu"
+        
+            
+        
+    
+    
+        
+        

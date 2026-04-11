@@ -49,4 +49,42 @@ def get_customer(customer_id:str,access_token:str|None = None) -> dict:
     return response.json()
 
 
+def get_users_bulk(user_ids:list[str], access_token:str|None = None) -> dict:
+    if not user_ids:
+        return {}
+
+    url = _build_url("user/bulk/")
+    headers = _auth_headers(access_token)
+    try:
+        response = requests.post(url, json={"ids": user_ids}, timeout=5, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        raise ValidationError("account-service est inaccessible.") from e
+    except requests.exceptions.Timeout as e:
+        raise ValidationError("account-service n'a pas répondu à temps.") from e
+
+    if response.status_code != status.HTTP_200_OK:
+        raise ValidationError("Une erreur est survenue lors de la récupération des utilisateurs.")
+
+    return response.json().get("results", {})
+
+
+def get_customers_bulk(customer_ids:list[str], access_token:str|None = None) -> dict:
+    if not customer_ids:
+        return {}
+
+    url = _build_url("customer/bulk/")
+    headers = _auth_headers(access_token)
+    try:
+        response = requests.post(url, json={"ids": customer_ids}, timeout=5, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        raise ValidationError("account-service est inaccessible.") from e
+    except requests.exceptions.Timeout as e:
+        raise ValidationError("account-service n'a pas répondu à temps.") from e
+
+    if response.status_code != status.HTTP_200_OK:
+        raise ValidationError("Une erreur est survenue lors de la récupération des clients.")
+
+    return response.json().get("results", {})
+
+
     

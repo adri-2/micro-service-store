@@ -1,2 +1,2 @@
 from .product_service import get_product, get_products
-from .user_service import get_user,get_customer
+from .user_service import get_user, get_customer, get_users_bulk, get_customers_bulk

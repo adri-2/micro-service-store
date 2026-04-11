@@ -178,3 +178,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
+# Prevent automatic URL slash redirects that can fail CORS preflight (OPTIONS).
+APPEND_SLASH = False

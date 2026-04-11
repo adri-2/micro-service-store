@@ -21,7 +21,8 @@ from rest_framework.routers import DefaultRouter
 from app.views import health, OrderViewSet
 
 
-router = DefaultRouter()
+# Accept both /orders and /orders/ to avoid browser preflight redirects.
+router = DefaultRouter(trailing_slash=r"/?")
 router.register(r"orders", OrderViewSet)
 
 urlpatterns = [

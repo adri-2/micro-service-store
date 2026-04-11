@@ -55,3 +55,11 @@ class UserPublicSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "username", "created_at", "updated_at"]
 
+
+class BulkIdsSerializer(serializers.Serializer):
+    ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=True,
+        max_length=1000,
+    )
+

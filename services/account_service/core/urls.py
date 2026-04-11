@@ -25,7 +25,9 @@ from app.views import (
     VerifyTokenView,
     RefreshView,
     UserDetailViewService,
-    ClientDetailService
+    ClientDetailService,
+    UserBulkViewService,
+    ClientBulkViewService,
 )
 
 urlpatterns = [
@@ -37,6 +39,8 @@ urlpatterns = [
     path("auth/verify/", VerifyTokenView.as_view()),
     path("user/me/<str:pk>/", UserDetailViewService.as_view()),
     path("customer/me/<str:pk>/", ClientDetailService.as_view()),
+    path("user/bulk/", UserBulkViewService.as_view()),
+    path("customer/bulk/", ClientBulkViewService.as_view()),
 ]
 
 

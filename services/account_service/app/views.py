@@ -13,6 +13,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .models import Client
 
 from .serializers import RegisterSerializer, LoginSerializer, UserPublicSerializer, ClientSerializer, ClientDetailSerializerService
+from .serializers import BulkIdsSerializer
 
 
 User = get_user_model()
@@ -90,6 +91,39 @@ class UserDetailViewService(APIView):
             return Response(UserPublicSerializer(user).data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserBulkViewService(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = BulkIdsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ids = serializer.validated_data["ids"]
+
+        users = User.objects.filter(id__in=ids).values("id", "username")
+        results = {str(item["id"]): {"id": str(item["id"]), "username": item["username"]} for item in users}
+        return Response({"results": results}, status=status.HTTP_200_OK)
+
+
+class ClientBulkViewService(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = BulkIdsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ids = serializer.validated_data["ids"]
+
+        clients = Client.objects.filter(id__in=ids).values("id", "first_name", "last_name")
+        results = {
+            str(item["id"]): {
+                "id": str(item["id"]),
+                "first_name": item["first_name"],
+                "last_name": item["last_name"],
+            }
+            for item in clients
+        }
+        return Response({"results": results}, status=status.HTTP_200_OK)
 
 
 class VerifyTokenView(APIView):

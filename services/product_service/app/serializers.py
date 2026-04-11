@@ -19,9 +19,9 @@ class ProductSerializer(serializers.ModelSerializer):
     # category = CategorySerializer(read_only=True)
     # suppliers = SupplierSerializer( read_only=True)
 
-    # Écriture (relations via ID)
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(),  write_only=True)
-    suppliers =  serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all(),write_only=True)
+    # # Écriture (relations via ID)
+    # category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(),  write_only=True)
+    # suppliers =  serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all(),write_only=True)
 
     class Meta:
         model = Product
@@ -33,34 +33,29 @@ class ProductSerializer(serializers.ModelSerializer):
                 {"price": "Le prix doit être supérieur à zéro."}
             )
         return data
+    
+class ProductListSerializer(serializers.ModelSerializer):
+    
 
-    # def create(self, validated_data):
-    #     category_id = validated_data.pop("category_id")
-    #     supplier_ids = validated_data.pop("supplier_ids", [])
+    # Écriture (relations via ID)
 
-    #     product = Product.objects.create(
-    #         category_id=category_id,
-    #         **validated_data
-    #     )
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
 
-    #     if supplier_ids:
-    #         product.suppliers.set(supplier_ids)
+   
+    suppliers_name = serializers.CharField(
+        # many=True,
+        read_only=True,
+        source="suppliers.name",
+    )
 
-    #     return product
 
-    # def update(self, instance, validated_data):
-    #     category_id = validated_data.pop("category_id", None)
-    #     supplier_ids = validated_data.pop("supplier_ids", None)
+    class Meta:
+        model = Product
+        fields = ["id", "name", "description", "price",  "category", "category_name",
+            "suppliers", "suppliers_name" ,"created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
-    #     if category_id:
-    #         instance.category_id = category_id
-
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-
-    #     instance.save()
-
-    #     if supplier_ids is not None:
-    #         instance.suppliers.set(supplier_ids)
-
-    #     return instance
+ 

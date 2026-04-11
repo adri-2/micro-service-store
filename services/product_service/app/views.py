@@ -4,7 +4,8 @@ from .models import Category, Supplier, Product
 from .serializers import (
     CategorySerializer,
     SupplierSerializer,
-    ProductSerializer
+    ProductSerializer,
+    ProductListSerializer
 )
 from rest_framework.decorators import permission_classes
 from rest_framework import permissions
@@ -23,6 +24,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    
+    
+            
+    
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
@@ -34,4 +39,11 @@ class SupplierViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.select_related("category").prefetch_related("suppliers")
-    serializer_class = ProductSerializer
+    # serializer_class = ProductSerializer
+    def get_serializer_class(self):
+        if self.action in ['create','update','partial_update']:
+            return ProductSerializer
+        elif self.action == 'list':
+            return ProductListSerializer
+        else:
+            return ProductSerializer

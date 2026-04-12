@@ -58,4 +58,12 @@ class ProductListSerializer(serializers.ModelSerializer):
             "suppliers", "suppliers_name" ,"created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+
+class BulkIdsSerializer(serializers.Serializer):
+    ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=True,
+        max_length=1000,
+    )
+
  

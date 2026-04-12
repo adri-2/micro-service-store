@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.urls import path
-from app.views import health,  CategoryViewSet, SupplierViewSet, ProductViewSet
+from app.views import health,  CategoryViewSet, SupplierViewSet, ProductViewSet, ProductBulkViewService
 
 from rest_framework.routers import DefaultRouter
 
@@ -29,5 +29,6 @@ router.register(r"products", ProductViewSet)
 
 urlpatterns = [
     path("health/", health),
+    path("products/bulk/", ProductBulkViewService.as_view()),
 ]
 urlpatterns += router.urls

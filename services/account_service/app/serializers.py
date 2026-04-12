@@ -10,13 +10,13 @@ User = get_user_model()
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ["id", "name", "created_at", "updated_at"]
+        fields = ["id", "first_name","last_name", "created_at", "updated_at"]
         read_only_fields = fields
         
 class ClientDetailSerializerService(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ["id", "name"]
+        fields = ["id", "first_name","last_name"]
         read_only_fields = fields
 
 

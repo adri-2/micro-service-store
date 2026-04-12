@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -32,6 +33,11 @@ class ClientDetailService(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Client.DoesNotExist:
             return Response({"detail": "Client non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+class ClientViewSet(ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ClientSerializer
+    queryset = Client.objects.all()
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]

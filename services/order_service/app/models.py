@@ -22,6 +22,7 @@ class BaseModel(models.Model):
 class Order(BaseModel):
 
     class StatusChoices(models.TextChoices):
+        DRAFT = 'Draft', 'Draft'
         PENDING = 'Pending', 'Pending'
         CONFIRMED = 'Confirmed', 'Confirmed'
         CANCELLED = 'Cancelled', 'Cancelled'
@@ -29,12 +30,14 @@ class Order(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     user_id = models.UUIDField()  # ID du user auth
+    user_name = models.CharField(max_length=150)  # Nom du user pour affichage
     client_id = models.UUIDField()   # ID venant du Clients Service
+    client_name = models.CharField(max_length=150)  # Nom du client pour affichage
 
     status = models.CharField(
         max_length=10,
         choices=StatusChoices.choices,
-        default=StatusChoices.PENDING
+        default=StatusChoices.DRAFT
     )
 
     total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)

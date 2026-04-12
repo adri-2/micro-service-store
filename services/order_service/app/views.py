@@ -1,15 +1,15 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+from pydantic_core import ValidationError
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
+import time
 from .models import Order, OrderItem
 from .serializers import (OrderDetailSerializer, OrderListSerializer,
                           OrderSerializer)
 # Create your views here.
-from .services import (get_customer, get_customers_bulk, get_product, get_user,
-                       get_users_bulk)
+
 
 
 def health(request):
@@ -17,6 +17,7 @@ def health(request):
                          "message": "Order service is healthy."})
     
 class OrderViewSet(viewsets.ModelViewSet):
+    # import time
 
     queryset = Order.objects.prefetch_related("items")
     # serializer_class = OrderSerializer
@@ -29,34 +30,43 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderListSerializer
         return OrderDetailSerializer
     
-    def list(self, request, *args, **kwargs):
-        self.queryset = self.get_queryset()
+    def perform_create(self, serializer):
+        t1 = time.time()
         
-        user_ids = list(set(str(o.user_id) for o in self.queryset))
-        customer_ids = list(set(str(o.client_id) for o in self.queryset))
+        # Étape A : Appel API externe
+        # ... ton code ...
+        print(f"DEBUG: Appel API externe: {time.time() - t1}s")
         
-        access_token = request.META.get("HTTP_AUTHORIZATION")
-        
-        try:
-            users_map = get_users_bulk(user_ids,access_token)
-        except Exception:
-            users_map = {}
-            
-        try:
-            customers_map = get_customers_bulk(customer_ids,access_token)
-        except Exception:
-            customers_map = {}
-            
-        serializer = self.get_serializer(
-            self.queryset,
-            many=True,
-            context={
-                "users_map":users_map,
-                "customers_map":customers_map
-            }
-        )
-        return Response(serializer.data)
+        t2 = time.time()
+        # Étape B : Sauvegarde BDD
+        serializer.save()
+        print(f"DEBUG: Sauvegarde BDD: {time.time() - t2}s")
     
+        t3 = time.time()
+        # Étape C : Envoi email ou autre
+        # ... ton code ...
+        print(f"DEBUG: Tâche post-création: {time.time() - t3}s")
+    
+   
+
+    def create(self, request, *args, **kwargs):
+     
+        start_time = time.time()
+        
+        # Ton code actuel
+        response = super().create(request, *args, **kwargs)
+        
+        print(f"--- Temps d'exécution : {time.time() - start_time} secondes ---")
+        return response
+    
+    def get_queryset(self):
+        qs = Order.objects.prefetch_related("items")
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+         
+        
     @action(
         detail=True,
         methods=['post'],

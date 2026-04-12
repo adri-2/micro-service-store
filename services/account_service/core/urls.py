@@ -17,6 +17,8 @@ Including another URLconf
 
 
 from django.urls import path
+from rest_framework.routers import DefaultRouter
+
 from app.views import (
     health,
     RegisterView,
@@ -29,7 +31,10 @@ from app.views import (
     ClientDetailService,
     UserBulkViewService,
     ClientBulkViewService,
+    ClientViewSet
 )
+route = DefaultRouter()
+route.register(r'customers', ClientViewSet, basename='customer')
 
 urlpatterns = [
     path("health/", health),
@@ -43,6 +48,7 @@ urlpatterns = [
     path("customer/me/<str:pk>/", ClientDetailService.as_view()),
     path("user/bulk/", UserBulkViewService.as_view()),
     path("customer/bulk/", ClientBulkViewService.as_view()),
-]
+  
+]+ route.urls
 
 

@@ -49,3 +49,20 @@ def get_products(access_token: str | None = None) -> dict:
         raise ValidationError("Une erreur est survenue lors de la récupération du produit.")
 
     return response.json()
+
+
+def get_products_bulk(product_ids, access_token=None):
+    url = _build_url("products/bulk/")
+    headers = _auth_headers(access_token)
+
+    response = requests.post(
+        url,
+        json={"ids": product_ids},
+        timeout=2,
+        headers=headers
+    )
+
+    if response.status_code != 200:
+        raise ValidationError("Erreur récupération produits")
+
+    return response.json().get("results", {})

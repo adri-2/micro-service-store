@@ -121,8 +121,9 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderListSerializer(OrderSerializer):
     # user_name = serializers.SerializerMethodField()
     # customer_name = serializers.SerializerMethodField()
-
+    items = OrderItemSerializer(many=True, read_only=True)
     class Meta(OrderSerializer.Meta):
+        model = Order
        
         fields = [
             "id",
@@ -134,9 +135,12 @@ class OrderListSerializer(OrderSerializer):
             "client_name",
             "created_at",
             "updated_at",
+            "items",
         ]
         read_only_fields = fields
         
+    # def get_items (self, obj):
+    #     return OrderItemSerializer(obj.items.all(), many=True).data
  
     
 

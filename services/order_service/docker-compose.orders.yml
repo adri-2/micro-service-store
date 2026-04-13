@@ -25,12 +25,15 @@ services:
     ports:
       - "${ORDERS_SERVICE_PORT:-8002}:8000"
     environment:
+      USE_PG: ${USE_PG:-true}
       DB_NAME: ${DB_NAME:-orders_db}
       DB_USER: ${DB_USER:-orders_user}
       DB_PASSWORD: ${DB_PASSWORD:-orders_pass}
       DB_HOST: orders-db
       DB_PORT: ${DB_PORT:-5432}
-      CATALOGUE_SERVICE_URL: ${CATALOGUE_SERVICE_URL:-http://catalogue-service:8000}
+      DATABASE_URL: postgresql://${DB_USER:-orders_user}:${DB_PASSWORD:-orders_pass}@orders-db:5432/${DB_NAME:-orders_db}
+      CATALOGUE_SERVICE_URL: http://catalogue-service:8000
+      ACCOUNT_SERVICE_URL: ${ACCOUNT_SERVICE_URL:-http://account-service:8000}
       # RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
     depends_on:
       - orders-db

@@ -49,6 +49,9 @@ class Order(BaseModel):
 
         self.total_amount = total
         self.save(update_fields=["total_amount"])
+        
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Order {self.id}" 

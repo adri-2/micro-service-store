@@ -86,7 +86,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 USE_PG  = os.getenv("USE_PG","false").lower() == "true"
-DB_URL = os.getenv("DATABASE_URL", "postgresql://catalogue_user:catalogue_pass@db/catalogue_db")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://catalogue_user:catalogue_pass@catalogue-db/catalogue_db")
 DATABASES = {}
 
 if USE_PG:
@@ -166,8 +166,6 @@ SIMPLE_JWT = {
     "ISSUER": os.environ.get("JWT_ISSUER", "account-service"),
     "AUDIENCE": os.environ.get("JWT_AUDIENCE", "store-front-services"),
 }
-
-AUTH_USER_MODEL = 'app.EmptyUser'
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [

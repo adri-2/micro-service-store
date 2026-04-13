@@ -25,11 +25,13 @@ services:
     ports:
       - "${CATALOGUE_SERVICE_PORT:-8001}:8000"
     environment:
+      USE_PG: ${USE_PG:-true}
       DB_NAME: ${DB_NAME:-catalogue_db}
       DB_USER: ${DB_USER:-catalogue_user}
       DB_PASSWORD: ${DB_PASSWORD:-catalogue_pass}
       DB_HOST: catalogue-db
       DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: postgresql://${DB_USER:-catalogue_user}:${DB_PASSWORD:-catalogue_pass}@catalogue-db:5432/${DB_NAME:-catalogue_db}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
 
     depends_on:

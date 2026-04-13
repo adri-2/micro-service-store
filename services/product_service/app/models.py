@@ -1,13 +1,6 @@
 import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.contrib.auth.base_user import AbstractBaseUser
-
-
-class EmptyUser(AbstractBaseUser):
-    USERNAME_FIELD = 'id'
-    class Meta:
-        app_label = 'app'
 
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

@@ -25,11 +25,18 @@ services:
     ports:
       - "${ACCOUNT_SERVICE_PORT:-8000}:8000"
     environment:
+      USE_PG: ${USE_PG:-true}
       DB_NAME: ${DB_NAME:-account_db}
       DB_USER: ${DB_USER:-account_user}
       DB_PASSWORD: ${DB_PASSWORD:-account_pass}
       DB_HOST: account-db
       DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: postgresql://${DB_USER:-account_user}:${DB_PASSWORD:-account_pass}@account-db:5432/${DB_NAME:-account_db}
+      # Credentials du superuser (CHANGEZ-LES EN PRODUCTION!)
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_EMAIL: admin@gmail.com
+      DJANGO_SUPERUSER_PASSWORD: admin
+      # DJANGO_SUPERUSER_ROLE: ADMIN
     depends_on:
       - account-db
       # - redis

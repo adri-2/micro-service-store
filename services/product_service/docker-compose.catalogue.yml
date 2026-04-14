@@ -33,6 +33,7 @@ services:
       DB_PORT: ${DB_PORT:-5432}
       DATABASE_URL: postgresql://${DB_USER:-catalogue_user}:${DB_PASSWORD:-catalogue_pass}@catalogue-db:5432/${DB_NAME:-catalogue_db}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/2
 
     depends_on:
       - catalogue-db

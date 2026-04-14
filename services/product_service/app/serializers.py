@@ -25,7 +25,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = "__all__"
+        fields = ["id", "name", "description", "price","stock",  "category", "suppliers" ,"created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+        
+        
 
     def validate(self, data):
         if data.get("price") and data["price"] <= 0:
@@ -33,6 +36,11 @@ class ProductSerializer(serializers.ModelSerializer):
                 {"price": "Le prix doit être supérieur à zéro."}
             )
         return data
+    
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError({"stock": "Stock ne peut pas être négatif."})
+        return value
     
 class ProductListSerializer(serializers.ModelSerializer):
     
@@ -54,7 +62,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "price",  "category", "category_name",
+        fields = ["id", "name", "description", "price","stock",  "category", "category_name",
             "suppliers", "suppliers_name" ,"created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 

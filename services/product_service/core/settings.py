@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'corsheaders',
     'rest_framework',
-    'app'
+    'app',
+       'django_redis',
 ]
 
 MIDDLEWARE = [
@@ -173,3 +174,18 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://global-redis:6379/2")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # Préfixe pour éviter les collisions avec les autres micro-services
+            "KEY_PREFIX": "catalogue" 
+        }
+    }
+}
+

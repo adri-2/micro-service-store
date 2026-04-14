@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'corsheaders',
     'rest_framework',
-    'app'
+    'app',
+       'django_redis',
 ]
 
 MIDDLEWARE = [
@@ -170,6 +171,7 @@ SIMPLE_JWT = {
 # CATALOGUE_SERVICE_URL docker: http://catalogue-service:8000
 CATALOGUE_SERVICE_URL = os.environ.get("CATALOGUE_SERVICE_URL", "http://localhost:8001")
 ACCOUNT_SERVICE_URL = os.environ.get("ACCOUNT_SERVICE_URL", "http://localhost:8000")
+PRODUCT_SERVICE_CACHE_TTL = int(os.environ.get("PRODUCT_SERVICE_CACHE_TTL", "300"))
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -177,6 +179,31 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://global-redis:6379/3")
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION":REDIS_URL, # On utilise la DB 3 pour le cache
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # Préfixe pour éviter les collisions avec les autres micro-services
+            "KEY_PREFIX": "orders" 
+        }
+    }
+}
+
+
+# Configuration Celery
+# On réutilise REDIS_URL si défini, sinon fallback Docker-compatible.
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", "redis://global-redis:6379/0"))
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE", "Africa/Douala")
+CELERY_ENABLE_UTC = False
+CELERY_TASK_DEFAULT_QUEUE = os.getenv("CELERY_TASK_DEFAULT_QUEUE", "orders")
 
 # Prevent automatic URL slash redirects that can fail CORS preflight (OPTIONS).
 APPEND_SLASH = False

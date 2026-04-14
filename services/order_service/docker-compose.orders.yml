@@ -34,10 +34,12 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-orders_user}:${DB_PASSWORD:-orders_pass}@orders-db:5432/${DB_NAME:-orders_db}
       CATALOGUE_SERVICE_URL: http://catalogue-service:8000
       ACCOUNT_SERVICE_URL: ${ACCOUNT_SERVICE_URL:-http://account-service:8000}
-      # RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/3
+      CELERY_BROKER_URL: redis://${REDIS_HOST:-global-redis}:6379/0
+      CELERY_RESULT_BACKEND: redis://${REDIS_HOST:-global-redis}:6379/0
+      CELERY_TIMEZONE: Africa/Douala
     depends_on:
       - orders-db
-      # - redis
     labels:
       - traefik.enable=true
       - traefik.http.routers.orders.rule=Host(`orders.localhost`)
@@ -47,13 +49,32 @@ services:
     networks:
       - orders_db_network
       - store_front_network
-  # redis:
-  #   image: redis:7
-  #   container_name: redis-orders
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - store_front_network
+
+  orders-worker:
+    build: .
+    container_name: orders-worker
+    command: celery -A core worker -l info --hostname=orders@%h --queues=orders
+    volumes:
+      - .:/app
+    environment:
+      USE_PG: ${USE_PG:-true}
+      DB_NAME: ${DB_NAME:-orders_db}
+      DB_USER: ${DB_USER:-orders_user}
+      DB_PASSWORD: ${DB_PASSWORD:-orders_pass}
+      DB_HOST: orders-db
+      DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: postgresql://${DB_USER:-orders_user}:${DB_PASSWORD:-orders_pass}@orders-db:5432/${DB_NAME:-orders_db}
+      CATALOGUE_SERVICE_URL: http://catalogue-service:8000
+      ACCOUNT_SERVICE_URL: ${ACCOUNT_SERVICE_URL:-http://account-service:8000}
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/3
+      CELERY_BROKER_URL: redis://${REDIS_HOST:-global-redis}:6379/0
+      CELERY_RESULT_BACKEND: redis://${REDIS_HOST:-global-redis}:6379/0
+      CELERY_TIMEZONE: Africa/Douala
+    depends_on:
+      - orders-db
+    networks:
+      - orders_db_network
+      - store_front_network
 
 volumes:
   orders_db_data:

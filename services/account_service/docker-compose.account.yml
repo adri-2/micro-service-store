@@ -37,6 +37,7 @@ services:
       DJANGO_SUPERUSER_EMAIL: admin@gmail.com
       DJANGO_SUPERUSER_PASSWORD: admin
       # DJANGO_SUPERUSER_ROLE: ADMIN
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/1
     depends_on:
       - account-db
       # - redis
@@ -50,13 +51,6 @@ services:
     networks:
       - account_db_network
       - store_front_network
-  # redis:
-  #   image: redis:7
-  #   container_name: redis-accounts
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - store_front_network
 
 volumes:
   account_db_data:

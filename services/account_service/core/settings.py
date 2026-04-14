@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    'app'
+    'app',
+    # 'django_redis',
 ]
 
 MIDDLEWARE = [
@@ -177,3 +178,34 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
+# 
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://global-redis:6379/1", # On utilise la DB 1 pour le cache
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             # Préfixe pour éviter les collisions avec les autres micro-services
+#             "KEY_PREFIX": "accounts" 
+#         }
+#     }
+# }
+
+
+
+# URL du broker (Redis) - On utilise la DB 0 pour Celery
+# CELERY_BROKER_URL = "redis://global-redis:6379/0"
+# CELERY_RESULT_BACKEND = "redis://global-redis:6379/0"
+
+# # Sécurité et format
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'Douala/Cameroun'
+# CELERY_ENABLE_UTC = False
+
+# # Pour éviter que les tâches ne restent bloquées
+# CELERY_TASK_TIME_LIMIT = 30 * 60
+

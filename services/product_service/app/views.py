@@ -134,7 +134,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Product.objects.select_related("category").prefetch_related("suppliers")
+    queryset = Product.objects.select_related("category").select_related("suppliers")
     # serializer_class = ProductSerializer
     
     def retrieve(self, request, *args, **kwargs):

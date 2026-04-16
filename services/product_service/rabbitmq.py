@@ -1,6 +1,8 @@
-from django.conf import settings
-import pika
 import json
+
+import pika
+from django.conf import settings
+
 
 class RabbitMQProducer:
     def __init__(self, host:str, port:int):

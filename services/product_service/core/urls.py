@@ -15,14 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from app.views import (CategoryViewSet, ProductBulkViewService, ProductViewSet,
+                       SupplierViewSet, cache_probe, health)
 from django.urls import path
-from app.views import (health, cache_probe, 
-                       CategoryViewSet, 
-                       SupplierViewSet, ProductViewSet, 
-                       ProductBulkViewService
-)
 from rest_framework.routers import DefaultRouter
-
 
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet)

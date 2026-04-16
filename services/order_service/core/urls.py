@@ -15,11 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from app.views import OrderViewSet, health
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-
-from app.views import health, OrderViewSet
-
 
 # Accept both /orders and /orders/ to avoid browser preflight redirects.
 router = DefaultRouter(trailing_slash=r"/?")

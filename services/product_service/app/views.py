@@ -1,25 +1,21 @@
-from django.shortcuts import render
 import hashlib
-from rest_framework import viewsets
-from .models import Category, Supplier, Product
-from .serializers import (
-    CategorySerializer,
-    SupplierSerializer,
-    ProductSerializer,
-    ProductListSerializer,
-    BulkIdsSerializer,
-)
-from rest_framework.decorators import permission_classes
-from rest_framework import permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+
 from django.core.cache import cache
-from django.utils import timezone
 # Create your views here.
 # def index(request):
 #     return render(request, "index.html")
 from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import permission_classes
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Category, Product, Supplier
+from .serializers import (BulkIdsSerializer, CategorySerializer,
+                          ProductListSerializer, ProductSerializer,
+                          SupplierSerializer)
 
 CACHE_TTL_SECONDS = 60 * 5
 

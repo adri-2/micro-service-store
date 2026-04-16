@@ -1,10 +1,8 @@
+from app.mailer import send_mail
 from fastapi import BackgroundTasks, FastAPI
-
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-
 from .config import MailBody
-from app.mailer import send_mail
 
 app = FastAPI()
 app.add_middleware(

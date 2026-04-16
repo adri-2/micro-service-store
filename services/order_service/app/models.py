@@ -1,9 +1,9 @@
 import uuid
-from django.db import models
-from django.core.exceptions import ValidationError
-
 
 from django.contrib.auth.base_user import AbstractBaseUser
+from django.core.exceptions import ValidationError
+from django.db import models
+
 
 # User vide qui ne crée qu'une table minimale
 class EmptyUser(AbstractBaseUser):

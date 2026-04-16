@@ -1,9 +1,11 @@
+from decimal import Decimal
+
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
+
 from .models import Order, OrderItem
-from  .services import get_user, get_customer,get_products_bulk
-from django.db import transaction
-from decimal import Decimal
+from .services import get_customer, get_products_bulk, get_user
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

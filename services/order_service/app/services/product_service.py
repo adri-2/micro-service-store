@@ -1,8 +1,10 @@
-import requests
 import hashlib
-from django.core.cache import cache
+
+import requests
 from django.conf import settings
+from django.core.cache import cache
 from rest_framework.exceptions import NotFound, ValidationError
+
 
 def _build_url(path: str) -> str:
     base = settings.CATALOGUE_SERVICE_URL.rstrip("/")

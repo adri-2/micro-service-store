@@ -1,9 +1,11 @@
-import os 
+import os
+
 from dotenv import load_dotenv
+
 load_dotenv()
-from pydantic import BaseModel
 from typing import List
 
+from pydantic import BaseModel
 
 HOST= os.environ.get("MAIL_HOST")
 PORT =os.environ.get("MAIL_PORT",465)

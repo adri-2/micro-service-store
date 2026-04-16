@@ -16,23 +16,13 @@ Including another URLconf
 """
 
 
+from app.views import (ClientBulkViewService, ClientDetailService,
+                       ClientViewSet, LoginView, LogoutView, MeView,
+                       RefreshView, RegisterView, UserBulkViewService,
+                       UserDetailViewService, VerifyTokenView, health)
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from app.views import (
-    health,
-    RegisterView,
-    LoginView,
-    MeView,
-    VerifyTokenView,
-    RefreshView,
-    LogoutView,
-    UserDetailViewService,
-    ClientDetailService,
-    UserBulkViewService,
-    ClientBulkViewService,
-    ClientViewSet
-)
 route = DefaultRouter()
 route.register(r'customers', ClientViewSet, basename='customer')
 

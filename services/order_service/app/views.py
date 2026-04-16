@@ -1,18 +1,20 @@
+import hashlib
+import time
 from datetime import timezone
-from .tasks import process_order_creation
+
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 from pydantic_core import ValidationError
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
-import time
+
 from .models import Order, OrderItem
 from .serializers import (OrderDetailSerializer, OrderListSerializer,
                           OrderSerializer)
+from .tasks import process_order_creation
 
-from django.core.cache import cache
-import hashlib
 # Create your views here.
 
 CACHE_TTL_SECONDS = 60 * 5 

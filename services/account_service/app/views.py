@@ -1,20 +1,22 @@
-from django.shortcuts import render
-
-# Create your views here.
-
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+from django.shortcuts import render
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError
-from .models import Client
 
-from .serializers import RegisterSerializer, LoginSerializer, UserPublicSerializer, ClientSerializer, ClientDetailSerializerService
-from .serializers import BulkIdsSerializer
+from .models import Client
+from .serializers import (BulkIdsSerializer, ClientDetailSerializerService,
+                          ClientSerializer, LoginSerializer,
+                          RegisterSerializer, UserPublicSerializer)
+
+# Create your views here.
+
+
 
 
 User = get_user_model()

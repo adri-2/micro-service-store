@@ -1,7 +1,9 @@
 import requests
 from django.conf import settings
-from rest_framework.exceptions import NotFound,ValidationError
 from rest_framework import status
+from rest_framework.exceptions import NotFound, ValidationError
+
+
 def _build_url(path:str) -> str:
     base = settings.ACCOUNT_SERVICE_URL.rstrip("/")
     clean_path = path.lstrip("/")

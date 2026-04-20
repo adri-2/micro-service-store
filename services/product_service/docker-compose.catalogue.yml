@@ -1,0 +1,70 @@
+services:
+  catalogue-db:
+    image: postgres:16
+    container_name: catalogue-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-catalogue_db}
+      POSTGRES_USER: ${DB_USER:-catalogue_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-catalogue_pass}
+    volumes:
+      - catalogue_db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - catalogue_db_network
+      - store_front_network
+
+  catalogue-service:
+    build: .
+    container_name: catalogue-service
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "${CATALOGUE_SERVICE_PORT:-8001}:8000"
+    environment:
+      USE_PG: ${USE_PG:-true}
+      DB_NAME: ${DB_NAME:-catalogue_db}
+      DB_USER: ${DB_USER:-catalogue_user}
+      DB_PASSWORD: ${DB_PASSWORD:-catalogue_pass}
+      DB_HOST: catalogue-db
+      DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: postgresql://${DB_USER:-catalogue_user}:${DB_PASSWORD:-catalogue_pass}@catalogue-db:5432/${DB_NAME:-catalogue_db}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/2
+
+    depends_on:
+      - catalogue-db
+      # - redis
+    networks:
+      - store_front_network
+      - catalogue_db_network
+    labels:
+      - "traefik.enable=true"
+      # - "traefik.http.routers.catalogue-service.rule=Host(`catalogue.local`)"
+      # - "traefik.http.routers.catalogue-service.rule=PathPrefix(`/catalogue`)"
+      # - "traefik.http.services.catalogue-service.loadbalancer.server.port=8000"
+      - traefik.http.routers.catalogue.rule=Host(`catalogue.localhost`)
+      - traefik.http.services.catalogue.loadbalancer.server.port=8000
+
+      - "traefik.docker.network=store_front_network"
+      - "traefik.http.routers.catalogue.entrypoints=web"
+
+  # redis:
+  #   image: redis:7
+  #   container_name: redis-catalogue
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - store_front_network
+
+volumes:
+  catalogue_db_data:
+
+networks:
+  catalogue_db_network:
+    driver: bridge
+  store_front_network:
+    external: true

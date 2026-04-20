@@ -124,7 +124,7 @@ Guides à suivre dans l'ordre :
 FLUX 2 — RabbitMQ (communication asynchrone)
 ==============================================================================
 
-RabbitMQ est déjà dans l'infrastructure (rabbitmq_service/docker-compose.yml).
+RabbitMQ est deja dans l'infrastructure (infrastructure/messaging/docker-compose.yml).
 pika est installé dans les requirements.
 L'URL est dans les variables d'environnement des docker-compose.
 

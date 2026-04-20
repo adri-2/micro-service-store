@@ -1,338 +1,104 @@
-Voici **une structure professionnelle d’un projet microservices avec Django et Django REST Framework**, incluant :
+# Architecture actuelle du projet
 
-* **API Gateway** → Traefik
-* **Service discovery** → Consul
-* **Communication inter-services HTTP propre**
-* **Conteneurisation** → Docker
+Ce document decrit l etat reel de la plateforme dans le repository.
 
-Cette architecture est **proche de ce qui est utilisé en production**.
-
----
-
-# 1️⃣ Architecture globale
+## 1) Vue globale
 
 ```text
 Client
-   |
-   v
-API Gateway (Traefik)
-   |
-   v
--------------------------------
-|        |        |           |
-Auth     Product   Order     User
-Service  Service   Service   Service
--------------------------------
-      |          |
-   PostgreSQL   Redis
-      |
-   Consul (service discovery)
+  |
+  v
+Traefik (80/443)
+  |
+  +--> account-service (Django, 8003->8000)
+  +--> catalogue-service (Django, 8001->8000)
+  +--> orders-service (Django, 8002->8000)
+  +--> message-service (FastAPI, 8004->8000)
+
+Infra partagee:
+  - global-redis (6379)
+  - rabbitmq (5672, ui 15672)
+  - flower (5555)
+
+Bases dediees:
+  - account-db (PostgreSQL, host 5433)
+  - catalogue-db (PostgreSQL, host 5432)
+  - orders-db (PostgreSQL, host 5434)
 ```
 
-Rôle :
+## 2) Orchestration
 
-| Composant       | Rôle                         |
-| --------------- | ---------------------------- |
-| API Gateway     | point d’entrée unique        |
-| Consul          | registre des services        |
-| Services Django | logique métier               |
-| HTTP interne    | communication entre services |
+La stack est pilotee par un compose unique a la racine:
 
----
+- docker-compose.yml
 
-# 2️⃣ Structure professionnelle du repository
+Demarrage:
 
-```text
-microservices-platform/
-
-docker-compose.yml
-.env
-README.md
-
-infrastructure/
-│
-├── gateway/
-│
-│
-├── consul/
-│   └── config/
-│       
-│
-├── monitoring/
-│   └── prometheus.yml
-
-services/
-│
-├── account_service/
-│
-├── user_service/
-│
-├── product_service/
-│
-└── order_service/
-
-shared/
-│
-├── clients/
-│   └── service_client.py
-│
-├── utils/
-│   └── exceptions.py
-│
-└── config/
-    └── settings_base.py
+```bash
+docker compose up -d --build
 ```
 
----
+Arret:
 
-# 3️⃣ Structure interne d’un microservice Django
-
-Exemple **product-service**
-
-```text
-product-service/
-
-Dockerfile
-requirements.txt
-entrypoint.sh
-manage.py
-
-config/
-│
-├── __init__.py
-├── settings.py
-├── urls.py
-├── asgi.py
-└── wsgi.py
-
-apps/
-│
-└── products/
-    │
-    ├── migrations/
-    │
-    ├── models.py
-    ├── serializers.py
-    ├── views.py
-    ├── urls.py
-    ├── services.py
-    ├── selectors.py
-    └── tests.py
+```bash
+docker compose down -v
 ```
 
-Rôle des couches :
+## 3) Services applicatifs
 
-| fichier     | rôle           |
-| ----------- | -------------- |
-| models      | structure DB   |
-| serializers | validation API |
-| views       | endpoints      |
-| services    | logique métier |
-| selectors   | requêtes DB    |
+### account-service
 
----
+- Role: authentification JWT, profils utilisateur, endpoints de support inter-service
+- Health: GET /health/
+- Endpoints principaux: /auth/register/, /auth/login/, /auth/refresh/, /auth/me/, /auth/verify/
 
-# 4️⃣ Communication inter-services propre
+### catalogue-service
 
-On évite d’appeler directement `requests` partout.
+- Role: CRUD categories/fournisseurs/produits
+- Health: GET /health/
+- Endpoints principaux: /categories/, /suppliers/, /products/
 
-On crée **un client partagé**.
+### orders-service
 
-### shared/clients/service_client.py
+- Role: gestion des commandes + orchestration metier
+- Health: GET /health/
+- Endpoints principaux: /orders/, /orders/{id}/confirm/
+- Dependances logiques: catalogue-service, account-service, redis, orders-db
 
-```python
-import requests
+### message-service
 
-class ServiceClient:
+- Role: API de notification (FastAPI) pour planifier l envoi d email
+- Endpoints principaux: GET /, POST /send-email
 
-    def __init__(self, service_url):
-        self.service_url = service_url
+## 4) Communication inter-services
 
-    def get(self, path):
-        response = requests.get(f"{self.service_url}/{path}")
+- Synchrone HTTP: orders-service -> catalogue-service et account-service
+- Asynchrone: Celery (orders-worker) + Redis broker/result backend
+- Messagerie event-driven disponible via RabbitMQ (infrastructure presente)
 
-        if response.status_code >= 400:
-            raise Exception("Service error")
+## 5) Reseau et noms de service
 
-        return response.json()
-```
+Tous les conteneurs partagent le reseau Docker:
 
----
+- store_front_network
 
-# 5️⃣ Client pour appeler Product Service
+Les appels inter-services utilisent les noms Docker DNS:
 
-Dans `order-service`.
+- <http://catalogue-service:8000>
+- <http://account-service:8000>
 
-```text
-order-service/apps/orders/clients/product_client.py
-```
+## 6) Note importante sur depends_on
 
-```python
-from shared.clients.service_client import ServiceClient
+depends_on (forme courte) garantit surtout l ordre de demarrage des conteneurs.
+Cela ne garantit pas que l application distante est deja prete a repondre.
 
-product_client = ServiceClient(
-    "http://product-service:8000/api"
-)
+Pour renforcer:
 
-def get_product(product_id):
-    return product_client.get(f"products/{product_id}")
-```
+1. Ajouter des healthchecks applicatifs
+2. Utiliser depends_on en forme longue avec condition service_healthy
+3. Garder des retries/timeouts cote client
 
----
+## 7) Hors scope actuel
 
-# 6️⃣ Utilisation dans la logique métier
-
-```python
-from .clients.product_client import get_product
-
-def create_order(product_id, quantity):
-
-    product = get_product(product_id)
-
-    total = product["price"] * quantity
-
-    return {
-        "product": product["name"],
-        "total": total
-    }
-```
-
----
-
-# 7️⃣ Service discovery avec Consul
-
-Chaque service s’enregistre dans **Consul**.
-
-Exemple config :
-
-```json
-{
-  "service": {
-    "name": "product-service",
-    "port": 8000
-  }
-}
-```
-
-Ensuite les services peuvent appeler :
-
-```
-http://product-service.service.consul
-```
-
----
-
-# 8️⃣ API Gateway configuration
-
-Avec **Traefik** :
-
-```yaml
-http:
-  routers:
-
-    product-router:
-      rule: "PathPrefix(`/products`)"
-      service: product-service
-
-  services:
-
-    product-service:
-      loadBalancer:
-        servers:
-          - url: "http://product-service:8000"
-```
-
----
-
-# 9️⃣ docker-compose simplifié
-
-```yaml
-version: "3.9"
-
-services:
-
-  gateway:
-    image: traefik:v3
-    ports:
-      - "80:80"
-
-  consul:
-    image: consul:1.15
-
-  product-service:
-    build: ./services/product-service
-
-  order-service:
-    build: ./services/order-service
-
-  postgres:
-    image: postgres:16
-```
-
----
-
-# 🔟 Flux complet d’une requête
-
-```text
-Client
-   |
-   v
-Traefik (API Gateway)
-   |
-   v
-Order Service
-   |
-   v
-Product Service
-   |
-   v
-Database
-```
-
----
-
-# 1️⃣1️⃣ Bonnes pratiques microservices Django
-
-Toujours séparer :
-
-| couche      | rôle                  |
-| ----------- | --------------------- |
-| selectors   | lecture DB            |
-| services    | logique métier        |
-| clients     | appel autres services |
-| serializers | validation API        |
-
----
-
-# 1️⃣2️⃣ Architecture complète finale
-
-```text
-microservices-platform/
-
-infrastructure/
-   gateway/
-   consul/
-
-services/
-   auth-service/
-   user-service/
-   product-service/
-   order-service/
-
-shared/
-   clients/
-   utils/
-```
-
----
-
-💡 **Conseil important pour ton apprentissage**
-
-Pour maîtriser les microservices avec **Django**, apprends dans cet ordre :
-
-1. **Docker**
-2. **API Gateway**
-3. **communication inter-services HTTP**
-4. **Service discovery (Consul)**
-5. **message broker (RabbitMQ)**
-6. **tasks async (Celery)**
+Cette base n utilise pas Consul pour le service discovery.
+Si Consul est introduit plus tard, il faudra ajouter une section dediee et mettre a jour le compose global.

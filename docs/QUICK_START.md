@@ -1,30 +1,57 @@
 # QUICK START (DEBUTANT)
 
-Si tu apprends encore, commence ici.
+Ce guide te permet de lancer toute la plateforme rapidement avec le compose global.
 
-## 1) Lis seulement ces 2 fichiers
+## 1) Prerequis
 
-1. `docs/BEGINNER_MICROSERVICES_GUIDE.md`
-2. `docs/BEGINNER_EXERCISES.md`
+1. Docker Desktop demarre
+2. Docker Compose disponible (`docker compose version`)
 
-## 2) Fais les exercices dans l ordre
+## 2) Demarrer la plateforme complete
 
-1. Exercice 1: health checks
-2. Exercice 2: decrement stock
-3. Exercice 3: appels HTTP entre services
-4. Exercice 4: creation de commande
-5. Exercice 5: routes + actions
+Depuis la racine du projet backend:
 
-## 3) Regle simple
+```bash
+copy .env.example .env
+docker compose up -d --build
+```
 
-Sur chaque appel HTTP inter-service, mets toujours `timeout=5`.
+## 3) Ports utiles
 
-## 4) Si tu bloques
+1. account-service: <http://localhost:8003>
+2. catalogue-service: <http://localhost:8001>
+3. orders-service: <http://localhost:8002>
+4. message-service: <http://localhost:8004>
+5. flower: <http://localhost:5555>
+6. rabbitmq ui: <http://localhost:15672>
+7. traefik dashboard: <http://localhost:8080>
 
-1. Lis le fichier `STEP_X_INSTRUCTIONS.py` de l etape correspondante.
-2. Teste un endpoint a la fois avec `curl`.
-3. Corrige une seule erreur, puis reteste.
+## 4) Tests rapides
 
-## 5) Objectif final
+```bash
+curl http://localhost:8003/health/
+curl http://localhost:8001/health/
+curl http://localhost:8002/health/
+```
 
-Quand `POST /orders/` diminue le stock produit et renvoie la commande, tu as reussi.
+Tu dois obtenir un JSON avec `status: ok`.
+
+## 5) Regle importante (inter-services)
+
+Sur chaque appel HTTP inter-service, garde toujours un timeout explicite (exemple: `timeout=5`).
+
+## 6) Comprendre `depends_on`
+
+`depends_on` impose surtout un ordre de demarrage, pas une garantie que l API distante est prete.
+Pour une dependance forte, ajoute des `healthcheck` + `condition: service_healthy`.
+
+## 7) Arreter proprement
+
+```bash
+docker compose down -v
+```
+
+## 8) Pour continuer l apprentissage
+
+1. docs/BEGINNER_MICROSERVICES_GUIDE.md
+2. docs/BEGINNER_EXERCISES.md

@@ -146,15 +146,15 @@ Créer ces deux fichiers en s'inspirant du modèle existant dans
 ## Étape 6 — Ajouter les views et les URLs manquantes
 
 **Pourquoi :**
-`account_service` et `order_service` n'ont aucun endpoint REST.
+Les endpoints REST existent deja, mais il faut maintenant les fiabiliser pour l hebergement.
 
 **À faire :**
 
 Pour chaque service :
 
-1. Implémenter les `ViewSet` dans `views.py`.
-2. Configurer un routeur DRF dans `urls.py`.
-3. Ajouter un endpoint `/health/` (indispensable pour Consul).
+1. Verifier que les `ViewSet` et les permissions sont coherents avec le role du service.
+2. Verifier les routeurs DRF et eviter les redirects inutiles (preflight CORS).
+3. Conserver un endpoint `/health/` exploitable par les healthchecks Docker.
 
 **Fichiers à modifier :**
 
@@ -165,15 +165,15 @@ Pour chaque service :
 
 ---
 
-## Étape 7 — Enregistrer les services dans Traefik et Consul
+## Étape 7 — Finaliser le routage Traefik et la readiness
 
 **Pourquoi :**
-Actuellement seul `catalogue-service` est accessible via Traefik
-et monitoré par Consul.
+La stack globale expose deja les services via Traefik, mais la readiness applicative
+et la robustesse de demarrage restent a renforcer.
 
 **À faire :**
 
-1. Ajouter les labels Traefik dans `docker-compose.account.yml` :
+1. Verifier les labels Traefik dans le compose global (routers + services + network).
 
    ```yaml
    labels:
@@ -184,13 +184,9 @@ et monitoré par Consul.
      - "traefik.http.routers.account-service.entrypoints=web"
    ```
 
-2. Faire de même dans `docker-compose.orders.yml` pour `orders.local`.
-
-3. Créer deux nouveaux fichiers de config Consul :
-   - `registry_service/config/account-service.json`
-   - `registry_service/config/orders-service.json`
-
-   En s'inspirant du `django-service.json` existant.
+2. Ajouter des `healthcheck` sur account-service, catalogue-service et orders-service.
+3. Passer les `depends_on` critiques en forme longue avec `condition: service_healthy`.
+4. Ajouter des retries/timeouts cote appels inter-services.
 
 ---
 
@@ -274,7 +270,7 @@ CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
 | 4 | Nettoyer settings.py des services API-only | IMPORTANT |
 | 5 | Ajouter les serializers | IMPORTANT |
 | 6 | Ajouter views et URLs | IMPORTANT |
-| 7 | Enregistrer dans Traefik et Consul | IMPORTANT |
+| 7 | Routage Traefik + readiness Docker | IMPORTANT |
 | 8 | Communication inter-services (HTTP sync) | IMPORTANT |
 | 9 | Connecter RabbitMQ | MODÉRÉ |
 | 10 | Remplacer runserver par Gunicorn | MODÉRÉ |

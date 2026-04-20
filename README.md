@@ -192,6 +192,37 @@ GET    /health/                    # Health check (AllowAny)
 
 ### Option 1 : Docker Compose (Recommandé)
 
+#### Démarrage global (1 seule commande)
+
+```bash
+# Se placer à la racine backend
+cd "c:\Users\wwwad\PycharmProjects\PROJECT-PERSO\django sans bd\backend"
+
+# (Optionnel) créer votre fichier d'environnement global
+# copy .env.example .env
+
+# Démarrer toute la plateforme (gateway, infra, DB, microservices, worker)
+docker compose up -d --build
+```
+
+Ports principaux :
+
+- `account-service` : `http://localhost:8003`
+- `product-service` : `http://localhost:8001`
+- `order-service` : `http://localhost:8002`
+- `message-service` : `http://localhost:8004`
+- `Flower` : `http://localhost:5555`
+- `RabbitMQ UI` : `http://localhost:15672`
+- `Traefik dashboard` : `http://localhost:8080`
+
+#### Arrêt global
+
+```bash
+docker compose down -v
+```
+
+---
+
 #### Démarrer tous les services
 
 ```bash

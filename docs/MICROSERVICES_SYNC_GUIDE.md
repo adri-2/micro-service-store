@@ -66,9 +66,9 @@ Instructions détaillées → voir `services/order_service/app/STEP_2_INSTRUCTIO
 
 1. Importer `os`
 2. Ajouter `CATALOGUE_SERVICE_URL = os.environ.get(...)`
-3. Cette URL doit pointer vers product_service:
-   - En local: `http://localhost:8001`
-   - En Docker: `http://product-service:8000`
+3. Cette URL doit pointer vers product_service.
+  En local: `http://localhost:8001`.
+  En Docker: `http://catalogue-service:8000`.
 
 Instructions détaillées → voir `services/order_service/core/STEP_3_INSTRUCTIONS.py`
 
@@ -216,27 +216,27 @@ Attendre: erreur 404 NotFound.
 
 ## Points d'Architecture à Comprendre
 
-**1. Synchrone vs Asynchrone**
+### 1. Synchrone vs Asynchrone
 
 - Ici: synchrone (HTTP, order_service ATTEND la réponse)
 - Plus tard: asynchrone avec RabbitMQ (order_service publie un événement, ne attend pas)
 
-**2. Timeout obligatoire**
+### 2. Timeout obligatoire
 
 - Sans `timeout=5`, si product_service ne répond pas, order_service gèle indéfiniment
 - Toujours mettre un timeout sur chaque appel réseau
 
-**3. Snapshot de données**
+### 3. Snapshot de donnees
 
 - `product_name` et `unit_price` sont copiés au moment de la création de l'item
 - Si le prix change dans product_service, l'ordre garde l'ancien prix (c'est voulu)
 
-**4. Transaction atomique**
+### 4. Transaction atomique
 
 - Si OrderItem.create() échoue après la création d'Order, on rollback tout
 - Évite des commandes "orphelines" en base de données
 
-**5. Séparation des responsabilités**
+### 5. Separation des responsabilites
 
 - product_service = logique de produit + stock
 - order_service = logique de commande + orchestration
@@ -251,7 +251,7 @@ Attendre: erreur 404 NotFound.
 ```python
 # MAUVAIS: requests directement dans le serializer
 def create(self, validated_data):
-    response = requests.get("http://product-service:8000/products/")
+  response = requests.get("http://catalogue-service:8000/products/")
 ```
 
 ✅ **Faire**:

@@ -31,3 +31,6 @@ htmlcov/
 
 celerybeat-schedule
 *.log
+
+# Django collectstatic output
+staticfiles/

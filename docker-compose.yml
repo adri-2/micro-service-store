@@ -26,19 +26,19 @@ services:
     networks:
       - store_front_network
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - store_front_network
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   volumes:
+  #     - rabbitmq_data:/var/lib/rabbitmq
+  #   networks:
+  #     - store_front_network
 
   account-db:
     image: postgres:16
@@ -48,7 +48,7 @@ services:
       POSTGRES_USER: ${ACCOUNT_DB_USER:-account_user}
       POSTGRES_PASSWORD: ${ACCOUNT_DB_PASSWORD:-account_pass}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - account_db_data:/var/lib/postgresql/data
     networks:
@@ -62,7 +62,7 @@ services:
       POSTGRES_USER: ${CATALOGUE_DB_USER:-catalogue_user}
       POSTGRES_PASSWORD: ${CATALOGUE_DB_PASSWORD:-catalogue_pass}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - catalogue_db_data:/var/lib/postgresql/data
     networks:
@@ -89,29 +89,35 @@ services:
     container_name: account-service
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+        python manage.py collectstatic --noinput &&
+        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     environment:
-      USE_PG: "true"
-      DATABASE_URL: postgresql://${ACCOUNT_DB_USER:-account_user}:${ACCOUNT_DB_PASSWORD:-account_pass}@account-db:5432/${ACCOUNT_DB_NAME:-account_db}
+      USE_PG: ${USE_PG:-true}
+      DB_NAME: ${DB_NAME:-account_db}
+      DB_USER: ${DB_USER:-account_user}
+      DB_PASSWORD: ${DB_PASSWORD:-account_pass}
       DB_HOST: account-db
-      DB_PORT: "5432"
-      REDIS_URL: redis://global-redis:6379/1
-      JWT_ISSUER: ${JWT_ISSUER:-account-service}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-store-front-services}
+      # DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: postgresql://${DB_USER:-account_user}:${DB_PASSWORD:-account_pass}@account-db:5432/${DB_NAME:-account_db}
+      # Credentials du superuser (CHANGEZ-LES EN PRODUCTION!)
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin}
+      # DJANGO_SUPERUSER_ROLE: ADMIN
+      REDIS_URL: redis://${REDIS_HOST:-global-redis}:6379/1
     ports:
-      - "8003:8000"
+      - "8000:8000"
     depends_on:
       - account-db
       - global-redis
     labels:
       - traefik.enable=true
-      - traefik.http.routers.accounts.rule=Host(`accounts.localhost`)
+      - traefik.http.routers.accounts.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/accounts`)
       - traefik.http.routers.accounts.entrypoints=web
       - traefik.http.services.accounts.loadbalancer.server.port=8000
       - traefik.docker.network=store_front_network
+      - traefik.http.middlewares.accounts-strip-prefix.stripprefix.prefixes=/api/v1/accounts
+      - traefik.http.routers.accounts.middlewares=accounts-strip-prefix
     volumes:
       - ./services/account_service:/app
     networks:
@@ -124,14 +130,15 @@ services:
     container_name: catalogue-service
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+        python manage.py collectstatic --noinput &&
+        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     environment:
-      USE_PG: "true"
+      USE_PG: ${USE_PG:-true}
       DATABASE_URL: postgresql://${CATALOGUE_DB_USER:-catalogue_user}:${CATALOGUE_DB_PASSWORD:-catalogue_pass}@catalogue-db:5432/${CATALOGUE_DB_NAME:-catalogue_db}
       DB_HOST: catalogue-db
-      DB_PORT: "5432"
+      # DB_PORT: "5432"
       REDIS_URL: redis://global-redis:6379/2
-      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-admin}:${RABBITMQ_DEFAULT_PASS:-admin}@rabbitmq:5672/
+      # RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-admin}:${RABBITMQ_DEFAULT_PASS:-admin}@rabbitmq:5672/
       JWT_ISSUER: ${JWT_ISSUER:-account-service}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-store-front-services}
     ports:
@@ -139,10 +146,12 @@ services:
     depends_on:
       - catalogue-db
       - global-redis
-      - rabbitmq
+      # - rabbitmq
     labels:
       - traefik.enable=true
-      - traefik.http.routers.catalogue.rule=Host(`catalogue.localhost`)
+      - traefik.http.routers.catalogue.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/catalogue`)
+      - traefik.http.middlewares.catalogue-stripprefix.stripprefix.prefixes=/api/v1/catalogue
+      - traefik.http.routers.catalogue.middlewares=catalogue-stripprefix
       - traefik.http.routers.catalogue.entrypoints=web
       - traefik.http.services.catalogue.loadbalancer.server.port=8000
       - traefik.docker.network=store_front_network
@@ -158,12 +167,13 @@ services:
     container_name: orders-service
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+        python manage.py collectstatic --noinput &&
+        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     environment:
       USE_PG: "true"
       DATABASE_URL: postgresql://${ORDERS_DB_USER:-orders_user}:${ORDERS_DB_PASSWORD:-orders_pass}@orders-db:5432/${ORDERS_DB_NAME:-orders_db}
       DB_HOST: orders-db
-      DB_PORT: "5432"
+      # DB_PORT: "5432"
       CATALOGUE_SERVICE_URL: http://catalogue-service:8000
       ACCOUNT_SERVICE_URL: http://account-service:8000
       REDIS_URL: redis://global-redis:6379/3
@@ -181,7 +191,9 @@ services:
       - global-redis
     labels:
       - traefik.enable=true
-      - traefik.http.routers.orders.rule=Host(`orders.localhost`)
+      - traefik.http.routers.orders.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/orders`)
+      - traefik.http.middlewares.orders-stripprefix.stripprefix.prefixes=/api/v1/orders
+      - traefik.http.routers.orders.middlewares=orders-stripprefix
       - traefik.http.routers.orders.entrypoints=web
       - traefik.http.services.orders.loadbalancer.server.port=8000
       - traefik.docker.network=store_front_network
@@ -200,7 +212,7 @@ services:
       USE_PG: "true"
       DATABASE_URL: postgresql://${ORDERS_DB_USER:-orders_user}:${ORDERS_DB_PASSWORD:-orders_pass}@orders-db:5432/${ORDERS_DB_NAME:-orders_db}
       DB_HOST: orders-db
-      DB_PORT: "5432"
+      # DB_PORT: "5434"
       CATALOGUE_SERVICE_URL: http://catalogue-service:8000
       ACCOUNT_SERVICE_URL: http://account-service:8000
       REDIS_URL: redis://global-redis:6379/3
@@ -222,7 +234,7 @@ services:
     container_name: flower
     command: celery flower --port=5555 --broker=redis://global-redis:6379/0
     environment:
-      CELERY_BROKER_URL: redis://global-redis:6379/0
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://global-redis:6379/0}
       FLOWER_UNAUTHENTICATED_API: "true"
     depends_on:
       - global-redis
@@ -231,31 +243,31 @@ services:
     networks:
       - store_front_network
 
-  message-service:
-    build:
-      context: ./services/message_service
-      dockerfile: Dockerfile
-    container_name: message-service
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-    environment:
-      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-    restart: unless-stopped
-    ports:
-      - "8004:8000"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.message.rule=Host(`message.localhost`)
-      - traefik.http.routers.message.entrypoints=web
-      - traefik.http.services.message.loadbalancer.server.port=8000
-      - traefik.docker.network=store_front_network
-    networks:
-      - store_front_network
+  # message-service:
+  #   build:
+  #     context: ./services/message_service
+  #     dockerfile: Dockerfile
+  #   container_name: message-service
+  #   command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+  #   environment:
+  #     MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+  #     MAIL_PORT: ${MAIL_PORT:-587}
+  #     MAIL_USERNAME: ${MAIL_USERNAME:-}
+  #     MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8004:8000"
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.message.rule=Host(`message.localhost`)
+  #     - traefik.http.routers.message.entrypoints=web
+  #     - traefik.http.services.message.loadbalancer.server.port=8000
+  #     - traefik.docker.network=store_front_network
+  #   networks:
+  #     - store_front_network
 
 volumes:
-  rabbitmq_data:
+  # rabbitmq_data:
   account_db_data:
   catalogue_db_data:
   orders_db_data:

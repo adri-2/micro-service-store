@@ -37,7 +37,7 @@ class ClientDetailService(APIView):
             return Response({"detail": "Client non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
 class ClientViewSet(ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ClientSerializer
     queryset = Client.objects.all()
 

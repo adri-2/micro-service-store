@@ -10,10 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
 from datetime import timedelta
 from pathlib import Path
-
+from decouple import config
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,8 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-ga(rs0r%)ph$xqeu*u()psjt7nf6o-cu$jn&4ep7^%erk_l**6"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = ["*"
     # "catalogue.localhost",
     # "orders.localhost",
@@ -57,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+        "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -88,8 +87,8 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-USE_PG  = os.getenv("USE_PG","false").lower() == "true"
-DB_URL = os.getenv("DATABASE_URL", "postgresql://account_user:account_pass@db/account_db")
+USE_PG = config("USE_PG", default=False, cast=bool)
+DB_URL = config("DATABASE_URL", default="postgresql://account_user:account_pass@db/account_db")
 DATABASES = {}
 
 if USE_PG:
@@ -141,7 +140,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -160,13 +161,13 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINUTES", "15"))),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("JWT_REFRESH_DAYS", "7"))),
-    "ALGORITHM": os.environ.get("JWT_ALGORITHM", "HS256"),
-    "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY", SECRET_KEY),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=config("JWT_ACCESS_MINUTES", default=15, cast=int)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=config("JWT_REFRESH_DAYS", default=7, cast=int)),
+    "ALGORITHM": config("JWT_ALGORITHM", default="HS256"),
+    "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
     "AUTH_HEADER_TYPES": ("Bearer","JWT"),
-    "ISSUER": os.environ.get("JWT_ISSUER", "account-service"),
-    "AUDIENCE": os.environ.get("JWT_AUDIENCE", "store-front-services"),
+    "ISSUER": config("JWT_ISSUER", default="account-service"),
+    "AUDIENCE": config("JWT_AUDIENCE", default="store-front-services"),
 }
 
 # Custom User Model
@@ -211,4 +212,5 @@ CORS_ALLOWED_ORIGINS = [
 
 # # Pour éviter que les tâches ne restent bloquées
 # CELERY_TASK_TIME_LIMIT = 30 * 60
+
 

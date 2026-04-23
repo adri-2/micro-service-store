@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
 from pathlib import Path
+from decouple import config
 
 import dj_database_url
 
@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-ga(rs0r%)ph$xqeu*u()psjt7nf6o-cu$jn&4ep7^%erk_l**6"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = ["*"
     # "catalogue.localhost",
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -86,8 +87,8 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-USE_PG  = os.getenv("USE_PG","false").lower() == "true"
-DB_URL = os.getenv("DATABASE_URL", "postgresql://catalogue_user:catalogue_pass@catalogue-db/catalogue_db")
+USE_PG = config("USE_PG", default=False, cast=bool)
+DB_URL = config("DATABASE_URL", default="postgresql://catalogue_user:catalogue_pass@catalogue-db/catalogue_db")
 DATABASES = {}
 
 if USE_PG:
@@ -139,7 +140,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -148,7 +151,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # settings catalogue-service JWT
 # Django REST Framework Configuration
-import os
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -161,12 +163,12 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ALGORITHM": os.environ.get("JWT_ALGORITHM", "HS256"),
-    "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY", SECRET_KEY),
-    "VERIFYING_KEY": os.environ.get("JWT_VERIFYING_KEY", ""),
+    "ALGORITHM": config("JWT_ALGORITHM", default="HS256"),
+    "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
+    "VERIFYING_KEY": config("JWT_VERIFYING_KEY", default=""),
     "AUTH_HEADER_TYPES": ("Bearer","JWT"),
-    "ISSUER": os.environ.get("JWT_ISSUER", "account-service"),
-    "AUDIENCE": os.environ.get("JWT_AUDIENCE", "store-front-services"),
+    "ISSUER": config("JWT_ISSUER", default="account-service"),
+    "AUDIENCE": config("JWT_AUDIENCE", default="store-front-services"),
 }
 
 # CORS Configuration
@@ -177,7 +179,7 @@ CORS_ALLOWED_ORIGINS = [
       "http://localhost:4173"
 ]
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://global-redis:6379/2")
+REDIS_URL = config("REDIS_URL", default="redis://global-redis:6379/2")
 
 CACHES = {
     "default": {

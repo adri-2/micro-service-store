@@ -15,6 +15,11 @@ from decouple import config
 
 import dj_database_url
 
+
+def env_or_default(name, default):
+    value = config(name, default=default)
+    return default if str(value).strip() == "" else value
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -163,9 +168,9 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ALGORITHM": config("JWT_ALGORITHM", default="HS256"),
-    "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
-    "VERIFYING_KEY": config("JWT_VERIFYING_KEY", default=""),
+    "ALGORITHM": env_or_default("JWT_ALGORITHM", "HS256"),
+    "SIGNING_KEY": env_or_default("JWT_SIGNING_KEY", SECRET_KEY),
+    "VERIFYING_KEY": env_or_default("JWT_VERIFYING_KEY", ""),
     "AUTH_HEADER_TYPES": ("Bearer","JWT"),
     "ISSUER": config("JWT_ISSUER", default="account-service"),
     "AUDIENCE": config("JWT_AUDIENCE", default="store-front-services"),

@@ -90,7 +90,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
         python manage.py collectstatic --noinput &&
-        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+        command: gunicorn core.wsgi:application --config gunicorn.conf.py"
     environment:
       USE_PG: ${USE_PG:-true}
       DB_NAME: ${DB_NAME:-account_db}
@@ -112,7 +112,7 @@ services:
       - global-redis
     labels:
       - traefik.enable=true
-      - traefik.http.routers.accounts.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/accounts`)
+      - traefik.http.routers.accounts.rule=(Host(`api.localhost`) || Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/api/v1/accounts`)
       - traefik.http.routers.accounts.entrypoints=web
       - traefik.http.services.accounts.loadbalancer.server.port=8000
       - traefik.docker.network=store_front_network
@@ -131,7 +131,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
         python manage.py collectstatic --noinput &&
-        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+        command: gunicorn core.wsgi:application --config gunicorn.conf.py"
     environment:
       USE_PG: ${USE_PG:-true}
       DATABASE_URL: postgresql://${CATALOGUE_DB_USER:-catalogue_user}:${CATALOGUE_DB_PASSWORD:-catalogue_pass}@catalogue-db:5432/${CATALOGUE_DB_NAME:-catalogue_db}
@@ -149,7 +149,7 @@ services:
       # - rabbitmq
     labels:
       - traefik.enable=true
-      - traefik.http.routers.catalogue.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/catalogue`)
+      - traefik.http.routers.catalogue.rule=(Host(`api.localhost`) || Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/api/v1/catalogue`)
       - traefik.http.middlewares.catalogue-stripprefix.stripprefix.prefixes=/api/v1/catalogue
       - traefik.http.routers.catalogue.middlewares=catalogue-stripprefix
       - traefik.http.routers.catalogue.entrypoints=web
@@ -168,7 +168,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
         python manage.py collectstatic --noinput &&
-        gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+        command: gunicorn core.wsgi:application --config gunicorn.conf.py"
     environment:
       USE_PG: "true"
       DATABASE_URL: postgresql://${ORDERS_DB_USER:-orders_user}:${ORDERS_DB_PASSWORD:-orders_pass}@orders-db:5432/${ORDERS_DB_NAME:-orders_db}
@@ -191,7 +191,7 @@ services:
       - global-redis
     labels:
       - traefik.enable=true
-      - traefik.http.routers.orders.rule=Host(`api.localhost`) && PathPrefix(`/api/v1/orders`)
+      - traefik.http.routers.orders.rule=(Host(`api.localhost`) || Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/api/v1/orders`)
       - traefik.http.middlewares.orders-stripprefix.stripprefix.prefixes=/api/v1/orders
       - traefik.http.routers.orders.middlewares=orders-stripprefix
       - traefik.http.routers.orders.entrypoints=web

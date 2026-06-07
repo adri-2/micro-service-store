@@ -11,9 +11,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from datetime import timedelta
+import os
 from pathlib import Path
 from decouple import config
 import dj_database_url
+
+
+def env_or_default(name, default):
+    value = config(name, default=default)
+    return default if str(value).strip() == "" else value
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,17 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ga(rs0r%)ph$xqeu*u()psjt7nf6o-cu$jn&4ep7^%erk_l**6"
+SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = ["*"
-    # "catalogue.localhost",
-    # "orders.localhost",
-    # "accounts.localhost",
-    # "localhost",
-    # "127.0.0.1",
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -55,7 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-        "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,25 +82,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-USE_PG = config("USE_PG", default=False, cast=bool)
-DB_URL = config("DATABASE_URL", default="postgresql://account_user:account_pass@db/account_db")
-DATABASES = {}
-
-if USE_PG:
-    DATABASES["default"] = dj_database_url.config(
-        default=DB_URL,
-        conn_max_age=60,
-    )
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
 
 
 
@@ -140,9 +119,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -160,57 +141,8 @@ REST_FRAMEWORK = {
 }
 
 
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=config("JWT_ACCESS_MINUTES", default=15, cast=int)),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=config("JWT_REFRESH_DAYS", default=7, cast=int)),
-    "ALGORITHM": config("JWT_ALGORITHM", default="HS256"),
-    "SIGNING_KEY": config("JWT_SIGNING_KEY", default=SECRET_KEY),
-    "AUTH_HEADER_TYPES": ("Bearer","JWT"),
-    "ISSUER": config("JWT_ISSUER", default="account-service"),
-    "AUDIENCE": config("JWT_AUDIENCE", default="store-front-services"),
-}
 
 # Custom User Model
 AUTH_USER_MODEL = 'app.User'
-
-# CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://localhost:4173"
-]
-
-
-
-# 
-
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://global-redis:6379/1", # On utilise la DB 1 pour le cache
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#             # Préfixe pour éviter les collisions avec les autres micro-services
-#             "KEY_PREFIX": "accounts" 
-#         }
-#     }
-# }
-
-
-
-# URL du broker (Redis) - On utilise la DB 0 pour Celery
-# CELERY_BROKER_URL = "redis://global-redis:6379/0"
-# CELERY_RESULT_BACKEND = "redis://global-redis:6379/0"
-
-# # Sécurité et format
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = 'Douala/Cameroun'
-# CELERY_ENABLE_UTC = False
-
-# # Pour éviter que les tâches ne restent bloquées
-# CELERY_TASK_TIME_LIMIT = 30 * 60
 
 

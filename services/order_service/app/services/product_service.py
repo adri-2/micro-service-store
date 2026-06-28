@@ -1,3 +1,4 @@
+#services\order_service\app\services\product_service.py
 import hashlib
 
 import requests
@@ -136,3 +137,66 @@ def get_products_bulk(product_ids, access_token=None):
             results[pid] = product
 
     return results
+
+def reserve_stock(items,access_token:str | None = None):
+    url = _build_url("stock/reserve/")
+    headers = _auth_headers(access_token)
+
+    try:
+        response = requests.post(
+            url,json={"items":items},
+            timeout=5,
+            headers=headers
+        )
+    except requests.exceptions.ConnectionError as e:
+        raise ValidationError("Catalogue-service indisponible.") from e
+    except requests.exceptions.Timeout as e:
+        raise ValidationError("Catalogue-service timeout.") from e
+    
+    if response.status_code != 200:
+        raise ValidationError("Impossible de réserver le stock.")
+    
+    return response.json()
+
+
+def confirm_stock(items,access_token:str | None=None):
+    url = _build_url("stock/confirm/")
+    headers = _auth_headers(access_token)
+
+    try:
+        response = requests.post(
+            url,
+            json={"items":items},
+            headers=headers
+        )
+    except requests.exceptions.ConnectionError as e:
+        raise ValidationError("Catalogue-service indisponible.") from e
+    except requests.exceptions.Timeout as e:
+        raise ValidationError("Catalogue-service timeout.") from e
+    
+    if response.status_code != 200:
+        raise ValidationError("Impossible de confirmer  le stock.")
+    
+    return response.json()
+
+def release_stock(items,access_token:str | None=None):
+    url = _build_url("stock/release/")
+    headers = _auth_headers(access_token)
+
+    try:
+        response = requests.post(
+            url,
+            json={"items":items},
+            timeout=5,
+            headers=headers
+        )
+    except requests.exceptions.ConnectionError as e:
+        raise ValidationError("Catalogue-service indisponible.") from e
+    except requests.exceptions.Timeout as e:
+        raise ValidationError("Catalogue-service timeout.") from e
+    
+    if response.status_code != 200:
+        raise ValidationError("Impossible de libérer le stock.")
+    
+    return response.json()
+

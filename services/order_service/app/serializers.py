@@ -64,62 +64,22 @@ class OrderSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop("items_input", [])
-        # request = self.context.get("request")
-
-        # access_token = None
-        # if request:
-        #     access_token = request.META.get("HTTP_AUTHORIZATION")
 
         if not items_data:
             raise ValidationError({"items_input": "Au moins un item obligatoire."})
 
-        #  SNAPSHOT ICI (BON ENDROIT)
-        # try:
-        #     user = get_user(str(validated_data["user_id"]), access_token)
-        # except Exception:
-        #     raise ValidationError({"user_id": "User introuvable."})
-
-        # try:
-        #     customer = get_customer(str(validated_data["client_id"]), access_token)
-        # except Exception:
-        #     raise ValidationError({"client_id": "Client introuvable."})
-
-        #  création avec snapshot
         order = Order.objects.create(
             user_id=validated_data["user_id"],
-        
             client_id=validated_data["client_id"],
-         
+            user_name="En cours",
+            client_name="En cours",
             status=Order.StatusChoices.DRAFT,
         )
-        # product_ids = [str(item['product_id']) for item in items_data]
-        
-        # try:
-        #     product_map = get_products_bulk(product_ids,access_token)
-        # except Exception:
-        #     raise ValidationError("Erreur recuperation produits")
 
-        #  items
-        for item in items_data:
-#             product = product_map.get(str(item["product_id"]))
-#             if not product:
-#                 raise ValidationError(   {"items_input": f"Produit {item['product_id']} introuvable"}
-# )
-#             unit_price = Decimal(str(product["price"]))
-
-            OrderItem.objects.create(
-                order=order,
-                product_id=item["product_id"],
-                              unit_price=0,
-                quantity=item["quantity"],
-                subtotal=0
-            )
-
-        # order.update_total()
         return order
     
     
-class OrderListSerializer(OrderSerializer):
+class OrderListSerializer(serializers.ModelSerializer):
     # user_name = serializers.SerializerMethodField()
     # customer_name = serializers.SerializerMethodField()
     items = OrderItemSerializer(many=True, read_only=True)

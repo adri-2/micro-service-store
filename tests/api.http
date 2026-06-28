@@ -53,8 +53,18 @@ POST {{account_service}}/auth/login/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "user1.e2e@gmail.com",
-    "password": "User1Pass123"
+    "email": "user2.e2e@gmail.com",
+    "password": "User2Pass123"
+}
+
+### Login with user 1 and capture JWT
+# @name loginAdmin
+POST {{account_service}}/auth/login/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "admin@gmail.com",
+    "password": "admin1234"
 }
 
 ### Verify access token
@@ -62,48 +72,48 @@ POST {{account_service}}/auth/verify/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "token": "{{loginUser1.response.body.$.access}}"
+    "token": "{{loginAdmin.response.body.$.access}}"
 }
 
 ### Me (user 1)
 GET {{account_service}}/auth/me/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ### User details for all 3 users
 GET {{account_service}}/user/me/{{registerUser1.response.body.$.user.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/user/me/{{registerUser2.response.body.$.user.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/user/me/{{registerUser3.response.body.$.user.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 ###
 GET {{account_service}}/customers/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 
 ### Check 5 clients exist in account service
 GET {{account_service}}/customer/me/{{client_1_id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/customer/me/{{client_2_id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/customer/me/{{client_3_id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/customer/me/{{client_4_id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{account_service}}/customer/me/{{client_5_id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ### Create client 1
 # @name createClient1
 POST {{account_service}}/customers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "first_name": "Amine",
@@ -117,7 +127,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createClient2
 POST {{account_service}}/customers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "first_name": "Fatou",
@@ -136,7 +146,7 @@ GET {{product_service}}/health/ HTTP/1.1
 # @name createCategory1
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Electronics",
@@ -147,7 +157,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createCategory2
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Home Appliances",
@@ -158,7 +168,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createCategory3
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Gaming",
@@ -169,7 +179,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createCategory4
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Office",
@@ -180,7 +190,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createCategory5
 POST {{product_service}}/categories/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Audio",
@@ -191,7 +201,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createSupplier1
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Sony Distribution",
@@ -205,7 +215,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createSupplier2
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Samsung Trade",
@@ -220,7 +230,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createSupplier3
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Logitech Hub",
@@ -234,7 +244,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createSupplier4
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Philips Supply",
@@ -248,7 +258,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createSupplier5
 POST {{product_service}}/suppliers/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Bose Import",
@@ -262,7 +272,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct1
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Laptop Pro 14",
@@ -277,7 +287,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct2
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "4K Monitor 27",
@@ -292,7 +302,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct3
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Wireless Keyboard",
@@ -307,7 +317,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct4
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Gaming Mouse X",
@@ -322,7 +332,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct5
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Air Fryer 6L",
@@ -337,7 +347,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct6
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Coffee Machine Plus",
@@ -351,7 +361,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct7
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "PlayBox Console",
@@ -366,7 +376,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct8
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Noise Cancelling Headphones",
@@ -381,7 +391,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct9
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Bluetooth Speaker",
@@ -396,7 +406,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createProduct10
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Smartphone Ultra",
@@ -409,11 +419,11 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 
 ### List categories / suppliers / products
 GET {{product_service}}/categories/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ###
 GET {{product_service}}/suppliers/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ###
 GET {{product_service}}/products/ HTTP/1.1
@@ -422,7 +432,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 ### Bulk get products by ids
 POST {{product_service}}/products/bulk/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "ids": [
@@ -441,7 +451,7 @@ GET {{order_service}}/health/ HTTP/1.1
 # @name createOrder1
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser1.response.body.$.user.id}}",
@@ -456,20 +466,21 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder2
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
-    "user_id": "{{registerUser2.response.body.$.user.id}}",
+    "user_id": "{{loginAdmin.response.body.$.user.id}}",
     "client_id": "{{client_2_id}}",
     "items_input": [
-        { "product_id": "{{createProduct3.response.body.$.id}}", "quantity": 3 }
+        { "product_id": "{{createProduct1.response.body.$.id}}", "quantity": 3 }
     ]
 }
 
+###
 # @name createOrder3
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser3.response.body.$.user.id}}",
@@ -483,7 +494,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder4
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser1.response.body.$.user.id}}",
@@ -496,7 +507,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder5
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser2.response.body.$.user.id}}",
@@ -509,7 +520,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder6
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser3.response.body.$.user.id}}",
@@ -524,7 +535,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder7
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser1.response.body.$.user.id}}",
@@ -538,7 +549,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder8
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser2.response.body.$.user.id}}",
@@ -553,7 +564,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder9
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser3.response.body.$.user.id}}",
@@ -567,7 +578,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 # @name createOrder10
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser1.response.body.$.user.id}}",
@@ -580,21 +591,21 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 ### Set status diversity
 ### Confirm 4 orders
 POST {{order_service}}/orders/{{createOrder1.response.body.$.id}}/confirm/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 POST {{order_service}}/orders/{{createOrder2.response.body.$.id}}/confirm/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 POST {{order_service}}/orders/{{createOrder3.response.body.$.id}}/confirm/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 POST {{order_service}}/orders/{{createOrder4.response.body.$.id}}/confirm/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ### Cancel 3 orders (ModelViewSet PATCH)
 PATCH {{order_service}}/orders/{{createOrder5.response.body.$.id}}/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "status": "Cancelled"
@@ -602,7 +613,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 
 PATCH {{order_service}}/orders/{{createOrder6.response.body.$.id}}/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "status": "Cancelled"
@@ -610,7 +621,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 
 PATCH {{order_service}}/orders/{{createOrder7.response.body.$.id}}/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "status": "Cancelled"
@@ -620,23 +631,24 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 
 ### List all orders and inspect status distribution
 GET {{order_service}}/orders/ HTTP/1.1
+Content-Type: application/json
 Authorization: Bearer {{loginUser1.response.body.$.access}}
 
 ### Check one order per status
 GET {{order_service}}/orders/{{createOrder1.response.body.$.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{order_service}}/orders/{{createOrder5.response.body.$.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 GET {{order_service}}/orders/{{createOrder8.response.body.$.id}}/ HTTP/1.1
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 ### Negative cases
 ### Invalid product payload: price must be > 0
 POST {{product_service}}/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "name": "Invalid Product",
@@ -650,7 +662,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 ### Invalid order payload: empty items_input
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser1.response.body.$.user.id}}",
@@ -661,7 +673,7 @@ Authorization: Bearer {{loginUser1.response.body.$.access}}
 ### Invalid order payload: quantity must be >= 1
 POST {{order_service}}/orders/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer {{loginUser1.response.body.$.access}}
+Authorization: Bearer {{loginAdmin.response.body.$.access}}
 
 {
     "user_id": "{{registerUser2.response.body.$.user.id}}",

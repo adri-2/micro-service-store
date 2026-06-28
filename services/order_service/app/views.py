@@ -1,7 +1,7 @@
 import hashlib
 import time
 from datetime import timezone
-
+from .services import confirm_stock, release_stock
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -94,21 +94,18 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         t1 = time.time()
-        
-        # Étape A : Appel API externe
-        # ... ton code ...
         print(f"DEBUG: Appel API externe: {time.time() - t1}s")
-        
+
         t2 = time.time()
-        # Étape B : Sauvegarde BDD
         order = serializer.save()
         _invalidate_api_cache()
-        print(f"DEBUG: Sauvegarde BDD: {time.time() - t2}s")        
+        print(f"DEBUG: Sauvegarde BDD: {time.time() - t2}s")
+
         access_token = self.request.META.get("HTTP_AUTHORIZATION")
-        process_order_creation.delay(str(order.id), access_token)    
+        items_data = serializer.initial_data.get("items_input", [])
+        process_order_creation.delay(str(order.id), items_data, access_token)
+
         t3 = time.time()
-        # Étape C : Envoi email ou autre
-        # ... ton code ...
         print(f"DEBUG: Tâche post-création: {time.time() - t3}s")
         
     def perform_update(self, serializer):
@@ -141,9 +138,41 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {"detail":"Seules les commandes Pending peuvent être confirmées."},
                 status=status.HTTP_400_BAD_REQUEST
             ) 
+        items = [
+            { "product_id": str(item.product_id),
+            "quantity": item.quantity,} 
+            for item in order.items.all()
+        ]
+        access_token = request.META.get('HTTP_AUTHORIZATION')
+        confirm_stock(items,access_token)
         order.status = Order.StatusChoices.CONFIRMED
         order.save(update_fields=["status","updated_at"])
         serializer = self.get_serializer(order)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
-        
+    @action(detail=True,methods=["post"],url_path="cancel")    
+    def cancel(self,request,pk=None):
+        order = self.get_object()
+
+        if order.status not in (
+            Order.StatusChoices.DRAFT,
+            Order.StatusChoices.PENDING,
+        ):
+            return Response(
+                 {"detail": "Cette commande ne peut plus être annulée."},
+            status=status.HTTP_400_BAD_REQUEST,
+            )
+        items = [
+              { "product_id": str(item.product_id),
+            "quantity": item.quantity,} 
+            for item in order.items.all()
+        ]
+        access_token = request.META.get('HTTP_AUTHORIZATION')
+
+        release_stock(items,access_token)
+        order.status = Order.StatusChoices.CANCELLED
+        order.save(update_fields=["status","updated_at"])
+
+        serializer =self.get_serializer(order)
+
+        return Response(serializer.data)

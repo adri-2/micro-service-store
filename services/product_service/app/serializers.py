@@ -75,4 +75,11 @@ class BulkIdsSerializer(serializers.Serializer):
         max_length=1000,
     )
 
+
+class StockItemSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()
+    quantity = serializers.IntegerField(min_value=1)
+
+class StockActionSerializer(serializers.Serializer):
+    items = StockItemSerializer(many=True)
  

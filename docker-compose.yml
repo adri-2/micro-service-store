@@ -8,6 +8,7 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
+      - --log.level=DEBUG
     ports:
       - "80:80"
       - "443:443"
@@ -41,7 +42,7 @@ services:
   #     - store_front_network
 
   account-db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: account-db
     environment:
       POSTGRES_DB: ${ACCOUNT_DB_NAME:-account_db}
@@ -55,7 +56,7 @@ services:
       - store_front_network
 
   catalogue-db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: catalogue-db
     environment:
       POSTGRES_DB: ${CATALOGUE_DB_NAME:-catalogue_db}
@@ -69,7 +70,7 @@ services:
       - store_front_network
 
   orders-db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: orders-db
     environment:
       POSTGRES_DB: ${ORDERS_DB_NAME:-orders_db}

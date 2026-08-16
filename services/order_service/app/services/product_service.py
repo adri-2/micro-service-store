@@ -139,7 +139,7 @@ def get_products_bulk(product_ids, access_token=None):
     return results
 
 def reserve_stock(items,access_token:str | None = None):
-    url = _build_url("stock/reserve/")
+    url = _build_url("products/stock/reserve/")
     headers = _auth_headers(access_token)
 
     try:
@@ -154,13 +154,14 @@ def reserve_stock(items,access_token:str | None = None):
         raise ValidationError("Catalogue-service timeout.") from e
     
     if response.status_code != 200:
-        raise ValidationError("Impossible de réserver le stock.")
-    
-    return response.json()
+        try:
+            raise ValidationError(response.json())
+        except Exception:
+            raise ValidationError(response.text)
 
 
 def confirm_stock(items,access_token:str | None=None):
-    url = _build_url("stock/confirm/")
+    url = _build_url("products/stock/confirm/")
     headers = _auth_headers(access_token)
 
     try:
@@ -175,12 +176,13 @@ def confirm_stock(items,access_token:str | None=None):
         raise ValidationError("Catalogue-service timeout.") from e
     
     if response.status_code != 200:
-        raise ValidationError("Impossible de confirmer  le stock.")
-    
-    return response.json()
+        try:
+            raise ValidationError(response.json())
+        except Exception:
+            raise ValidationError(response.text)
 
 def release_stock(items,access_token:str | None=None):
-    url = _build_url("stock/release/")
+    url = _build_url("products/stock/release/")
     headers = _auth_headers(access_token)
 
     try:
@@ -196,7 +198,7 @@ def release_stock(items,access_token:str | None=None):
         raise ValidationError("Catalogue-service timeout.") from e
     
     if response.status_code != 200:
-        raise ValidationError("Impossible de libérer le stock.")
-    
-    return response.json()
-
+        try:
+            raise ValidationError(response.json())
+        except Exception:
+            raise ValidationError(response.text)

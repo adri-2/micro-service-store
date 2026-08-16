@@ -97,13 +97,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         print(f"DEBUG: Appel API externe: {time.time() - t1}s")
 
         t2 = time.time()
-        order = serializer.save()
+        access_token = self.request.META.get("HTTP_AUTHORIZATION")
+        items_data = serializer.initial_data.get("items_input", [])
+        order = serializer.save(
+            access_token=access_token
+        )
         _invalidate_api_cache()
         print(f"DEBUG: Sauvegarde BDD: {time.time() - t2}s")
 
-        access_token = self.request.META.get("HTTP_AUTHORIZATION")
-        items_data = serializer.initial_data.get("items_input", [])
-        process_order_creation.delay(str(order.id), items_data, access_token)
+        
+        process_order_creation.delay(str(order.id), access_token)
 
         t3 = time.time()
         print(f"DEBUG: Tâche post-création: {time.time() - t3}s")
@@ -150,6 +153,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(order)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
     @action(detail=True,methods=["post"],url_path="cancel")    
     def cancel(self,request,pk=None):
         order = self.get_object()

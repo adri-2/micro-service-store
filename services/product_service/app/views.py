@@ -227,7 +227,16 @@ class ReserveStockView(APIView):
         serializer.is_valid(raise_exception=True)
 
         items = serializer.validated_data["items"]
-        product_ids = [item["product_id"] for item in items]
+        items = [
+            {
+                "product_id": str(i["product_id"]),
+                "quantity": int(i["quantity"]),
+                }
+                for i in items
+
+            
+        ]
+        product_ids = [str(item["product_id"]) for item in items]
 
         products = Product.objects.select_for_update().filter(
             id__in=product_ids
@@ -238,21 +247,37 @@ class ReserveStockView(APIView):
             str(product.id):product
             for product in products
         }
-        updated_products = []
+        updated = []
+        print("ITEMS VALIDATED:", items)
+        print("PRODUCT IDS:", product_ids)
+        print("PRODUCT MAP KEYS:", product_map.keys())
 
 
         for item in items:
-            product = product_map.get(str(item["product_id"]))
-            if product is None:
-                raise ValidationError(  f"Produit {item['product_id']} introuvable.")
+            pid = str(item["product_id"])
+            product = product_map.get(pid)
+            if not product:
+                raise ValidationError(  f"Produit {pid} introuvable.")
+            
             qty = item["quantity"]
-            if product.available_stock < qty:
+            print("AVAILABLE:", product.available_stock)
+            print("REQ QTY:", qty)
+
+            if  product.available_stock < qty:
                 raise ValidationError(
-                    f"stock insuffisant pour {product.id}"
+                    f"stock insuffisant pour {pid}"
+                )
+            for product in products:
+                print(
+                    "PRODUCT:",
+                    product.id,
+                    "stock=", product.stock,
+                    "reserved=", product.reserved_stock,
+                    "available=", product.available_stock
                 )
             product.reserved_stock += qty
-            updated_products.append(product)
-        Product.objects.bulk_update(updated_products,["reserved_stock"])
+            updated.append(product)
+        Product.objects.bulk_update(updated,["reserved_stock"])
             
         return Response(
             {"detail":"Stock réservé"},
@@ -268,33 +293,36 @@ class ConfirmStockView(APIView):
         serializer.is_valid(raise_exception=True)
 
         items = serializer.validated_data["items"]
-        product_ids = [item["product_id"] for item in items]
+        product_ids = [str(item["product_id"]) for item in items]
 
         products = Product.objects.select_for_update().filter(
             id__in=product_ids
-        ).only("id",
-               "stock",
-               "reserved_stock"   )
+        )
         product_map = {
-            str(product.id):product
-            for product in products
+            str(p.id):p
+            for p in products
         }
-        updated_products = []
+        updated = []
+       
 
         for item in items:
-            product = product_map.get(str(item["product_id"]))
-            if product is None:
-                raise ValidationError(  f"Produit {item['product_id']} introuvable.")
+            pid = str(item["product_id"])
+            product = product_map.get(pid)
+
+            if not product:
+                raise ValidationError(  f"Produit {pid} introuvable.")
+            
             qty = item["quantity"]
-            if product.available_stock < qty:
+
+            if product.reserved_stock < qty:
                 raise ValidationError(
-                    f"stock insuffisant pour {product.name}"
+                    f"stock reserve insuffisant pour {pid}"
                 )
             product.stock -= qty
             product.reserved_stock -= qty
-            updated_products.append(product)
+            updated.append(product)
         Product.objects.bulk_update(
-            updated_products,
+            updated,
             ["stock",
               "reserved_stock",]
         )
@@ -314,7 +342,7 @@ class ReleaseStockView(APIView):
         serializer.is_valid(raise_exception=True)
 
         items = serializer.validated_data["items"]
-        product_ids = [item["product_id"] for item in items]
+        product_ids = [str(item["product_id"]) for item in items]
 
         products = Product.objects.select_for_update().filter(
             id__in=product_ids
@@ -324,26 +352,28 @@ class ReleaseStockView(APIView):
         )
 
         product_map = {
-            str(product.id):product
-            for product in products 
+            str(p.id):p
+            for p in products 
         }
-        updated_products = []
+        updated = []
 
         for item in items:
-            product = product_map.get(str(item["product_id"]))
-            if product is None:
+            pid = str(item["product_id"])
+            product = product_map.get(pid)
+            if not product:
                 raise ValidationError(
-                    f"Produit{item['product_id']} introuvable."
+                    f"Produit {pid} introuvable."
                 )
             qty = item["quantity"]
+
             if product.reserved_stock < qty:
                 raise ValidationError(
-                    f"Le stock réservé est insuffisant pour {product.id}"
+                    f"Le stock réservé est insuffisant pour {pid}"
                 )
             product.reserved_stock -= qty
-            updated_products.append(product)
+            updated.append(product)
         Product.objects.bulk_update(
-            updated_products,
+            updated,
             ["reserved_stock"]
         )
 

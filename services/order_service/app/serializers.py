@@ -4,8 +4,10 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 
+from .services import reserve_stock
+
 from .models import Order, OrderItem
-from .services import get_customer, get_products_bulk, get_user
+
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -63,10 +65,18 @@ class OrderSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        
         items_data = validated_data.pop("items_input", [])
+        items_data = [
+           { "product_id":str(item["product_id"]),
+            "quantity":item["quantity"]}
+            for item in items_data
+        ]
+        access_token = validated_data.pop("access_token")
+        reserve_stock(items_data,access_token)
 
-        if not items_data:
-            raise ValidationError({"items_input": "Au moins un item obligatoire."})
+        # if not items_data:
+        #     raise ValidationError({"items_input": "Au moins un item obligatoire."})
 
         order = Order.objects.create(
             user_id=validated_data["user_id"],
@@ -75,6 +85,15 @@ class OrderSerializer(serializers.ModelSerializer):
             client_name="En cours",
             status=Order.StatusChoices.DRAFT,
         )
+        for item in items_data:
+            OrderItem.objects.create(
+                order=order,
+                product_id=item["product_id"],
+                quantity=item["quantity"],
+                product_name="En cours",
+                unit_price=Decimal("0.00"),
+                subtotal=Decimal("0.00"),
+            )
 
         return order
     

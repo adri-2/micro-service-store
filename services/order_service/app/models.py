@@ -6,11 +6,7 @@ from django.db import models
 
 
 # User vide qui ne crée qu'une table minimale
-class EmptyUser(AbstractBaseUser):
-    USERNAME_FIELD = 'id'
-    
-    class Meta:
-        app_label = 'app'
+
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

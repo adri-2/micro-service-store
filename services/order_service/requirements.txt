@@ -14,3 +14,4 @@ redis>=4.5
 celery>=5.3
 gunicorn>=21.2
 whitenoise>=6.0
+drf-yasg

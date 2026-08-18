@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'app',
        'django_redis',
+       'drf_yasg',
 ]
 
 MIDDLEWARE = [

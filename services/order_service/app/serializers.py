@@ -126,10 +126,12 @@ class OrderListSerializer(serializers.ModelSerializer):
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     
-    
+    items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
         fields = "__all__" 
+
+
         
        
         

@@ -14,7 +14,7 @@ from datetime import timedelta
 import os
 from pathlib import Path
 from decouple import config
-import dj_database_url
+
 
 
 def env_or_default(name, default):
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'app',
     # 'django_redis',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

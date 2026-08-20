@@ -132,7 +132,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         fields = "__all__" 
 
 
-        
+class OrderStatusChange(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ["status","update_at"]
+        read_only_fields = ["update_at"]
        
         
     

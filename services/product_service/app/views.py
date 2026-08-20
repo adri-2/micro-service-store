@@ -267,18 +267,22 @@ class ReserveStockView(APIView):
                 raise ValidationError(
                     f"stock insuffisant pour {pid}"
                 )
-            for product in products:
+            # Print debug info for all products but do not override the current
+            # `product` variable used below. Use a separate loop variable `p`.
+            for p in products:
                 print(
                     "PRODUCT:",
-                    product.id,
-                    "stock=", product.stock,
-                    "reserved=", product.reserved_stock,
-                    "available=", product.available_stock
+                    p.id,
+                    "stock=", p.stock,
+                    "reserved=", p.reserved_stock,
+                    "available=", p.available_stock
                 )
+            # Increase reserved_stock for the selected product instance
             product.reserved_stock += qty
             updated.append(product)
         Product.objects.bulk_update(updated,["reserved_stock"])
-            
+        _invalidate_api_cache()
+             
         return Response(
             {"detail":"Stock réservé"},
             status=status.HTTP_200_OK
@@ -313,7 +317,7 @@ class ConfirmStockView(APIView):
                 raise ValidationError(  f"Produit {pid} introuvable.")
             
             qty = item["quantity"]
-
+            print(">>>>>>>>>>>>>>>>>>>>",product.reserved_stock ,"<<<<<<<<<<<<<<<<<<<<<<<<<<",qty)
             if product.reserved_stock < qty:
                 raise ValidationError(
                     f"stock reserve insuffisant pour {pid}"
@@ -326,6 +330,7 @@ class ConfirmStockView(APIView):
             ["stock",
               "reserved_stock",]
         )
+        _invalidate_api_cache()
 
 
         return Response(
@@ -376,6 +381,7 @@ class ReleaseStockView(APIView):
             updated,
             ["reserved_stock"]
         )
+        _invalidate_api_cache()
 
         return Response(
             {"detail": "Stock libéré."},

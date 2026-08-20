@@ -117,9 +117,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         
     def perform_destroy(self, instance):
+ 
         instance.delete()
         _invalidate_api_cache()
     
+    def destroy(self,rquest, *args,**kwargs):
+        instance  = self.get_object()
+
+        if instance.status == Order.StatusChoices.CONFIRMED:
+            return Response(
+            {"detail": "Une commande confirmée ne peut pas être supprimée."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        self.perform_destroy(instance)
+        _invalidate_api_cache()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
     def get_queryset(self):
         qs = Order.objects.prefetch_related("items")
@@ -150,6 +162,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         confirm_stock(items,access_token)
         order.status = Order.StatusChoices.CONFIRMED
         order.save(update_fields=["status","updated_at"])
+        _invalidate_api_cache()
         serializer = self.get_serializer(order)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -176,7 +189,24 @@ class OrderViewSet(viewsets.ModelViewSet):
         release_stock(items,access_token)
         order.status = Order.StatusChoices.CANCELLED
         order.save(update_fields=["status","updated_at"])
+        _invalidate_api_cache()
 
         serializer =self.get_serializer(order)
 
         return Response(serializer.data)
+
+    # @action(detail=True,methods=["post"],url_path="archive")
+    # def archive(self,request,pk=None):
+    #     order = self.get_object()
+    #     if order.status not in (
+    #         Order.StatusChoices.DRAFT,
+    #         Order.StatusChoices.PENDING
+    #     ):
+    #         return Response(
+    #             {"detail":"Cette commande ne peut plus être archivee."}
+    #         )
+    #     order.status = Order.StatusChoices.ARCHIVED
+    #     order.save(update_fields=["status","update_at"])
+
+    #     serializer = self.get_serializer(order)
+    #     return Response(serializer.data)

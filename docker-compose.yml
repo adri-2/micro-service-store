@@ -27,19 +27,19 @@ services:
     networks:
       - store_front_network
 
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   container_name: rabbitmq
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
-  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   volumes:
-  #     - rabbitmq_data:/var/lib/rabbitmq
-  #   networks:
-  #     - store_front_network
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - store_front_network
 
   account-db:
     image: postgres:16-alpine
@@ -83,6 +83,19 @@ services:
     networks:
       - store_front_network
 
+  billing-db:
+    image: postgres:16-alpine
+    container_name: billing-db
+    environment:
+      POSTGRES_DB: ${BILLING_DB_NAME:-billing_db}
+      POSTGRES_USER: ${BILLING_DB_USER:-billing_user}
+      POSTGRES_PASSWORD: ${BILLING_DB_PASSWORD:-billing_pass}
+    ports:
+      - "5425:5432"
+    volumes:
+      - billing_db_data:/var/lib/postgresql/data
+    networks:
+      - store_front_network
 
   account-service:
     build:
@@ -118,8 +131,8 @@ services:
       - traefik.http.routers.accounts.entrypoints=web
       - traefik.http.services.accounts.loadbalancer.server.port=8000
       - traefik.docker.network=store_front_network
-      - traefik.http.middlewares.accounts-strip-prefix.stripprefix.prefixes=/api/v1/accounts
-      - traefik.http.routers.accounts.middlewares=accounts-strip-prefix
+      - traefik.http.middlewares.accounts-stripprefix.stripprefix.prefixes=/api/v1/accounts
+      - traefik.http.routers.accounts.middlewares=accounts-stripprefix
     volumes:
       - ./services/account_service:/app
     networks:
@@ -191,6 +204,7 @@ services:
       - catalogue-service
       - account-service
       - global-redis
+      - rabbitmq
     labels:
       - traefik.enable=true
       - traefik.http.routers.orders.rule=(Host(`api.localhost`) || Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/api/v1/orders`)
@@ -245,31 +259,58 @@ services:
     networks:
       - store_front_network
 
-  # message-service:
-  #   build:
-  #     context: ./services/message_service
-  #     dockerfile: Dockerfile
-  #   container_name: message-service
-  #   command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-  #   environment:
-  #     MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-  #     MAIL_PORT: ${MAIL_PORT:-587}
-  #     MAIL_USERNAME: ${MAIL_USERNAME:-}
-  #     MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8004:8000"
-  #   labels:
-  #     - traefik.enable=true
-  #     - traefik.http.routers.message.rule=Host(`message.localhost`)
-  #     - traefik.http.routers.message.entrypoints=web
-  #     - traefik.http.services.message.loadbalancer.server.port=8000
-  #     - traefik.docker.network=store_front_network
-  #   networks:
-  #     - store_front_network
+
+  billing-service:
+    build:
+      context: ./services/billing_service
+      dockerfile: Dockerfile
+
+    container_name: billing-service
+
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+             "--reload",
+        "--host",
+        "0.0.0.0",
+   
+        "--port",
+        "8000"
+      ]
+
+    environment:
+      DATABASE_URL: postgresql://${BILLING_DB_USER:-billing_user}:${BILLING_DB_PASSWORD:-billing_pass}@billing-db:5432/${BILLING_DB_NAME:-billing_db}
+
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-admin}:${RABBITMQ_DEFAULT_PASS:-admin}@rabbitmq:5672/
+
+    restart: unless-stopped
+
+    ports:
+      - "8004:8000"
+
+    depends_on:
+      - billing-db
+      - rabbitmq
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.billing.rule=(Host(`api.localhost`) || Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/api/v1/billing`)
+      - traefik.http.middlewares.billing-stripprefix.stripprefix.prefixes=/api/v1/billing
+      - traefik.http.routers.billing.middlewares=billing-stripprefix
+      - traefik.http.routers.billing.entrypoints=web
+      - traefik.http.services.billing.loadbalancer.server.port=8000
+      - traefik.docker.network=store_front_network
+
+    volumes:
+      - ./services/billing_service:/app
+
+    networks:
+      - store_front_network
 
 volumes:
-  # rabbitmq_data:
+  rabbitmq_data:
+  billing_db_data:
   account_db_data:
   catalogue_db_data:
   orders_db_data:

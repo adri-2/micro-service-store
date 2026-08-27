@@ -38,6 +38,11 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    # healthcheck:
+    #   test: ["CMD", "rabbitmqctl", "status"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
     networks:
       - store_front_network
 
@@ -196,6 +201,7 @@ services:
       CELERY_RESULT_BACKEND: redis://global-redis:6379/0
       CELERY_TIMEZONE: Africa/Douala
       JWT_ISSUER: ${JWT_ISSUER:-account-service}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-admin}:${RABBITMQ_DEFAULT_PASS:-admin}@rabbitmq:5672/
       JWT_AUDIENCE: ${JWT_AUDIENCE:-store-front-services}
     ports:
       - "8002:8000"
@@ -245,20 +251,6 @@ services:
     networks:
       - store_front_network
 
-  flower:
-    image: mher/flower:2.0.1
-    container_name: flower
-    command: celery flower --port=5555 --broker=redis://global-redis:6379/0
-    environment:
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://global-redis:6379/0}
-      FLOWER_UNAUTHENTICATED_API: "true"
-    depends_on:
-      - global-redis
-    ports:
-      - "5555:5555"
-    networks:
-      - store_front_network
-
 
   billing-service:
     build:
@@ -267,16 +259,13 @@ services:
 
     container_name: billing-service
 
-    command:
-      [
-        "uvicorn",
-        "app.main:app",
-             "--reload",
-        "--host",
-        "0.0.0.0",
-   
-        "--port",
-        "8000"
+    command:  [
+      "uvicorn",
+      "app.main:app",
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "8000"
       ]
 
     environment:
@@ -307,6 +296,21 @@ services:
 
     networks:
       - store_front_network
+
+  flower:
+    image: mher/flower:2.0.1
+    container_name: flower
+    command: celery flower --port=5555 --broker=redis://global-redis:6379/0
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://global-redis:6379/0}
+      FLOWER_UNAUTHENTICATED_API: "true"
+    depends_on:
+      - global-redis
+    ports:
+      - "5555:5555"
+    networks:
+      - store_front_network
+
 
 volumes:
   rabbitmq_data:

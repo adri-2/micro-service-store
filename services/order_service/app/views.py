@@ -9,7 +9,7 @@ from pydantic_core import ValidationError
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
-
+from .messaging.publisher import publish_event
 from .models import Order, OrderItem
 from .serializers import (OrderDetailSerializer, OrderListSerializer,
                           OrderSerializer)
@@ -210,3 +210,51 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     #     serializer = self.get_serializer(order)
     #     return Response(serializer.data)
+
+    @action(
+    detail=True,
+    methods=["post"],
+    url_path="account"
+    )
+    def account(self, request, pk=None):
+
+        order = self.get_object()
+
+        if order.status != Order.StatusChoices.CONFIRMED:
+            return Response(
+                {
+                    "detail": "Seules les commandes confirmées peuvent être comptabilisées."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order.status = Order.StatusChoices.ACCOUNTED
+
+        order.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
+        _invalidate_api_cache()
+
+        event = {
+            "event": "order.accounted",
+            "order_id": str(order.id),
+            "client_id": str(order.client_id),
+            "client_name": order.client_name,
+            "total_amount": str(order.total_amount),
+        }
+
+        publish_event(
+            routing_key="order.accounted",
+            payload=event,
+        )
+
+        serializer = self.get_serializer(order)
+        
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )

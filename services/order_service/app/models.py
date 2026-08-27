@@ -22,6 +22,9 @@ class Order(BaseModel):
         PENDING = 'Pending', 'Pending'
         CONFIRMED = 'Confirmed', 'Confirmed'
         CANCELLED = 'Cancelled', 'Cancelled'
+        ACCOUNTED = 'Accounted', 'Accounted'
+        ARCHIVED = 'Archived', 'Archived'
+        PAID = 'Paid', 'Paid' 
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 

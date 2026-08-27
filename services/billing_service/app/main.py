@@ -1,10 +1,12 @@
 from fastapi import FastAPI
-from .database import engine
-from .models import Base
+# from .database import engine
+from .database import SessionLocal
+from .models import Invoice
+# from .models import Base
 from contextlib import asynccontextmanager
 from .rabbitmq import connect_rabbitmq,consume_orders
 import asyncio
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 print(">>> Main.py Charche")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,9 +50,13 @@ def health():
         "status": "healthy",
     }
 
-@app.get("/db-check")
-def db_check():
-    with engine.connect() as connection:
-        return {
-            "database":"connected"
-        }
+@app.get("/invoices")
+def list():
+    db = SessionLocal()
+    return db.query(Invoice).all()
+# @app.get("/db-check")
+# def db_check():
+#     with engine.connect() as connection:
+#         return {
+#             "database":"connected"
+#         }
